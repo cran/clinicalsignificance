@@ -4,6 +4,11 @@
 # clinicalsignificance <img src="man/figures/logo.png" width="300" align="right" />
 
 <!-- badges: start -->
+
+[![](https://www.r-pkg.org/badges/version/clinicalsignificance)](https://cran.r-project.org/package=clinicalsignificance)
+[![](http://cranlogs.r-pkg.org/badges/grand-total/clinicalsignificance)](https://cran.r-project.org/package=clinicalsignificance)
+[![](https://app.codecov.io/gh/pedscience/clinicalsignificance/branch/main/graph/badge.svg)](https://app.codecov.io/gh/pedscience/clinicalsignificance)
+
 <!-- badges: end -->
 
 The goal of this package is to provide all necessary tools for analyses
@@ -19,6 +24,10 @@ You can install the development version of clinicalsignificance from
 [GitHub](https://github.com/) with:
 
 ``` r
+# The easiest way to get clinicalsignificance is to install it from CRAN:
+install.packages("clinicalsignificance")
+
+# Or you install the development version from GitHub:
 # install.packages("devtools")
 devtools::install_github("pedscience/clinicalsignificance")
 ```
@@ -100,7 +109,7 @@ or plot the results with
 plot(results)
 ```
 
-<img src="man/figures/README-unnamed-chunk-3-1.png" width="80%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-5-1.png" width="80%" style="display: block; margin: auto;" />
 
 ## Rationale
 
@@ -134,7 +143,7 @@ populations (the black line in between), then this patient has changed
 clinically significant (if that change is beyond the error of
 measurement of the instrument).
 
-<img src="man/figures/README-unnamed-chunk-4-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" style="display: block; margin: auto;" />
 
 ## References
 

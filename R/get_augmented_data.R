@@ -1,5 +1,11 @@
 #' Get Data Augmented With Clinical Significance Categories
 #'
+#' To obtain patient-wise results, use `get_augmented_data()`.
+#'
+#' This function returns the patient-wise results, containing the considered pre
+#' and post intervention value, its raw change as well as the RCI and the
+#' individual category a patient belongs to.
+#'
 #' @inheritParams get_data
 #'
 #' @importFrom dplyr left_join case_when relocate
@@ -31,11 +37,11 @@ get_augmented_data <- function(x) {
   if (clinisig_method == "HLM") {
     hlm_categories <- x[["categories"]]
     hlm_coefficients <- x[["rci"]][["coefficients"]] %>%
-      select(.data$id, .data$intercept, .data$slope, .data$eb_slope)
+      select(id, eb_estimate, sd)
 
     categories <- hlm_categories %>%
       left_join(hlm_coefficients, by = "id") %>%
-      relocate(.data$intercept:.data$eb_slope, .after = .data$post)
+      relocate(eb_estimate:sd, .after = post)
   } else {
     categories <- x[["categories"]]
   }
@@ -49,6 +55,6 @@ get_augmented_data <- function(x) {
         deteriorated ~ "Deteriorated",
         harmed ~ "Harmed"
       ),
-      category = factor(.data$category, levels = c("Recovered", "Improved", "Unchanged", "Deteriorated", "Harmed"))
+      category = factor(category, levels = c("Recovered", "Improved", "Unchanged", "Deteriorated", "Harmed"))
     )
 }

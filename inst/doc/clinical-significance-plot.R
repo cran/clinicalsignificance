@@ -241,7 +241,6 @@ anxiety_results_hlm <- anxiety %>%
   )
 
 plot(anxiety_results_hlm, which = "trajectory")
-plot(anxiety_results_hlm, which = "slope")
 
 ## -----------------------------------------------------------------------------
 anxiety_results_grouped <- anxiety %>% 
@@ -261,15 +260,14 @@ anxiety_results_grouped <- anxiety %>%
 plot(anxiety_results_grouped, upper_limit = 60)
 
 ## -----------------------------------------------------------------------------
-plot(anxiety_results, upper_limit = 60, show = "recovered")
-plot(anxiety_results, upper_limit = 60, show = "improved")
+plot(anxiety_results, upper_limit = 60, show = recovered)
+plot(anxiety_results, upper_limit = 60, show = improved)
 
 ## -----------------------------------------------------------------------------
-plot(anxiety_results, upper_limit = 60, show = "category")
+plot(anxiety_results, upper_limit = 60, show = category)
 
 ## -----------------------------------------------------------------------------
-plot(anxiety_results_hlm, which = "trajectory", show = "recovered")
-plot(anxiety_results_hlm, which = "slope", show = "recovered")
+plot(anxiety_results_hlm, which = "trajectory", show = recovered)
 
 ## -----------------------------------------------------------------------------
 plot(anxiety_results_hlm, which = "trajectory", show = "recovered") +

@@ -1,7 +1,7 @@
 Package: clinicalsignificance
 Type: Package
 Title: Determine the Clinical Significance in Clinical Trials
-Version: 1.0.0
+Version: 1.2.0
 Authors@R: 
     person("Benedikt", "Claus", , "b.claus@pedscience.de", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-9501-0954"))
@@ -14,15 +14,18 @@ License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 Depends: R (>= 2.10)
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.2
 Imports: checkmate, crayon, dplyr, ggplot2, insight, lme4, magrittr,
         purrr, rlang, tibble, tidyr
 Suggests: knitr, rmarkdown, testthat (>= 3.0.0), tidyverse, vdiffr
 Config/testthat/edition: 3
 VignetteBuilder: knitr
+URL: https://pedscience.github.io/clinicalsignificance/,
+        https://github.com/pedscience/clinicalsignificance
+BugReports: https://github.com/pedscience/clinicalsignificance/issues
 NeedsCompilation: no
-Packaged: 2022-06-02 08:18:53 UTC; bened
+Packaged: 2022-12-08 12:21:10 UTC; bened
 Author: Benedikt Claus [aut, cre] (<https://orcid.org/0000-0001-9501-0954>)
 Maintainer: Benedikt Claus <b.claus@pedscience.de>
 Repository: CRAN
-Date/Publication: 2022-06-03 07:30:05 UTC
+Date/Publication: 2022-12-08 12:50:02 UTC

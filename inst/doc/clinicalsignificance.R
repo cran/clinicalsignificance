@@ -42,7 +42,7 @@ summary(results)
 plot(results, upper_limit = 63)
 
 ## ---- fig.width=6-------------------------------------------------------------
-plot(results, upper_limit = 63, show = "category")
+plot(results, upper_limit = 63, show = category)
 
 ## -----------------------------------------------------------------------------
 results_grouped <- claus_2020 %>% 

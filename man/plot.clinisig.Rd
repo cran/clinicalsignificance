@@ -11,8 +11,8 @@
   rci_fill = "grey10",
   rci_alpha = 0.1,
   diagonal_color = "black",
-  show = NULL,
-  which = c("point", "trajectory", "slope"),
+  show,
+  which = c("point", "trajectory"),
   include_cutoff = TRUE,
   include_cutoff_band = FALSE,
   x_lab = NULL,
@@ -37,25 +37,21 @@ any value between 0 and 1.}
 \item{diagonal_color}{String, a color (name or HEX code) for the line
 indicating no change.}
 
-\item{show}{String. You have several options to color different features. Available are
+\item{show}{Category name. You have several options to color different features. Available are
 \itemize{
-\item \code{"category"} (shows all categories at once) which is the default
-\item \code{"recovered"} (shows recovered participants)
-\item \code{"improved"} (shows improved participants)
-\item \code{"unchanged"} (shows unchanged participants)
-\item \code{"deteriorated"} (shows deteriorated participants, if available)
-\item \code{"harmed"} (shows harmed participants, if available)
+\item \code{category} (shows all categories at once) which is the default
+\item \code{recovered} (shows recovered participants)
+\item \code{improved} (shows improved participants)
+\item \code{unchanged} (shows unchanged participants)
+\item \code{deteriorated} (shows deteriorated participants, if available)
+\item \code{harmed} (shows harmed participants, if available)
 }}
 
 \item{which}{String. Which plot type should be shown? Defaults to \code{"point"}
 which yields the default clinical significance plot. The HLM method
 incorporates multiple measurements per participant, so a reduction to pre
 and post values may remove important information. Therefore, you can
-additionally choose to plot either
-\itemize{
-\item each participants trajectory (with \code{"trajectory"}), or
-\item each participants fitted Empirical Bayes slope (with \code{"slope"})
-}}
+additionally choose to plot each participants trajectory (with \code{"trajectory"})}
 
 \item{include_cutoff}{Logical. Should the clinical cutoff be plotted as well?
 Defaults to \code{TRUE}.}

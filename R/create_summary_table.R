@@ -21,18 +21,18 @@
   data %>%
     group_by({{ group_var }}) %>%
     summarise(
-      across(.data$recovered:.data$harmed, sum),
+      across(recovered:harmed, sum),
       .groups = "drop"
     ) %>%
     pivot_longer(
-      cols = .data$recovered:.data$harmed,
+      cols = recovered:harmed,
       names_to = "category",
       values_to = "n"
     ) %>%
     group_by({{ group_var }}) %>%
     mutate(
-      percent = .data$n / sum(.data$n),
-      category = toTitleCase(.data$category)
+      percent = n / sum(n),
+      category = toTitleCase(category)
     ) %>%
     ungroup()
 }
@@ -45,6 +45,7 @@
 #' @param cutoff True cutoff score
 #' @param mean_post Mean of post meausurement
 #' @param sd_post SD of post measurement
+#' @param direction Which direction is better? 1 = higher, -1 = lower
 #'
 #' @importFrom stats pnorm sd
 #' @importFrom dplyr tibble matches
@@ -54,7 +55,7 @@
 #' @return A tibble with columns `category` and `percent`
 #'
 #' @noRd
-.create_summary_table_ha <- function(data, r_dd, se_measurement, cutoff, sd_post) {
+.create_summary_table_ha <- function(data, r_dd, se_measurement, cutoff, sd_post, direction) {
   reliability_post <- .calc_reliability_ha(sd_post, se_measurement)
 
   if (.has_group(data)) {
@@ -63,27 +64,41 @@
     group_var <- NULL
   }
 
-  data %>%
+  summaries <- data %>%
     group_by({{ group_var }}) %>%
     summarise(
-      mean_change = mean(.data$change),
-      sd_change = sd(.data$change),
-      m_post = mean(.data$post),
-      sd_post = sd(.data$post)
-    ) %>%
-    mutate(
-      z_changed = (0 - .data$mean_change) / (.data$sd_change * sqrt(r_dd)),
-      changed = pnorm(.data$z_changed),
-      z_functional = (cutoff - .data$m_post) / (.data$sd_post * sqrt(reliability_post)),
-      functional = pnorm(.data$z_functional)
-    ) %>%
+      mean_change = mean(change),
+      sd_change = sd(change),
+      m_post = mean(post),
+      sd_post = sd(post)
+    )
+
+  if (direction == 1) {
+    group_level_pcts <- summaries %>%
+      mutate(
+        z_changed = (0 - mean_change) / (sd_change * sqrt(r_dd)),
+        changed = 1 - pnorm(z_changed),
+        z_functional = (cutoff - m_post) / (sd_post * sqrt(reliability_post)),
+        functional = 1 - pnorm(z_functional)
+      )
+  } else if (direction == -1) {
+    group_level_pcts <- summaries %>%
+      mutate(
+        z_changed = (0 - mean_change) / (sd_change * sqrt(r_dd)),
+        changed = pnorm(z_changed),
+        z_functional = (cutoff - m_post) / (sd_post * sqrt(reliability_post)),
+        functional = pnorm(z_functional)
+      )
+  }
+
+  group_level_pcts %>%
     select(-matches(".*_.*")) %>%
     pivot_longer(
-      cols = c(.data$changed, .data$functional),
+      cols = c(changed, functional),
       names_to = "category",
       values_to = "percent"
     ) %>%
     mutate(
-      category = toTitleCase(.data$category)
+      category = toTitleCase(category)
     )
 }
