@@ -1,163 +1,193 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# clinicalsignificance <img src="man/figures/logo.png" width="300" align="right" />
+# clinicalsignificance <img src="man/figures/logo.png" align="right" height="139" alt="" />
 
 <!-- badges: start -->
 
 [![](https://www.r-pkg.org/badges/version/clinicalsignificance)](https://cran.r-project.org/package=clinicalsignificance)
 [![](http://cranlogs.r-pkg.org/badges/grand-total/clinicalsignificance)](https://cran.r-project.org/package=clinicalsignificance)
-[![](https://app.codecov.io/gh/pedscience/clinicalsignificance/branch/main/graph/badge.svg)](https://app.codecov.io/gh/pedscience/clinicalsignificance)
 
+[![R-CMD-check](https://github.com/pedscience/clinicalsignificance/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/pedscience/clinicalsignificance/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-The goal of this package is to provide all necessary tools for analyses
-of clinical significance in clinical intervention studies. In contrast
-to *statistical* significance, which assesses if it is probable that
-there is a treatment effect, *clinical* significance can be used to
+The goal of this powerful package is to provide all necessary tools for
+analyses of clinical significance in clinical intervention studies. In
+contrast to *statistical* significance, which assesses if it is probable
+that there is a treatment effect, *clinical* significance can be used to
 determine if a treatment effect is of practical use or meaningful for
-patients.
+patients. This package is designed to help researchers and healthcare
+professionals determine the clinical relevance of their findings. It
+provides various functions and tools for quantifying and visualizing
+clinical significance, making it easier to make informed decisions in
+the medical field.
 
 ## Installation
 
-You can install the development version of clinicalsignificance from
-[GitHub](https://github.com/) with:
+You can install the clinicalsignificance package from CRAN using the
+following command:
 
 ``` r
-# The easiest way to get clinicalsignificance is to install it from CRAN:
 install.packages("clinicalsignificance")
+```
 
-# Or you install the development version from GitHub:
-# install.packages("devtools")
+Alternatively, you can install the development version from GitHub:
+
+``` r
 devtools::install_github("pedscience/clinicalsignificance")
 ```
 
+## Main Functions
+
+The main functions of the package are based on the main approaches for
+clinical significance analyses, i.e., the anchor-based approach, the
+percentage-change approach, the distribution-based approach, the
+statistical, and combined approaches. Hence, the main functions are
+
+- `cs_anchor()`
+- `cs_percentage()`
+- `cs_distribution()`
+- `cs_statistical()`
+- `cs_combined()`
+
+See the package vignettes for additional details on the various clinical
+significance approaches.
+
 ## Example
 
-Given a tidy dataset, the employed instrument’s reliability and
-descriptives (*M* and *SD*) of the functional population, the clinical
-significance in a study can be easily assessed.
+Claus et al. (2020) implemented a novel intervention to enhance the
+effectiveness of antidepressants by boosting the inherent placebo effect
+of that medication. The randomized patients to treatment as usual (TAU)
+and a placebo amplification (PA) group and measured the severity of
+depressive symptoms over time.
+
+In the anchor-based approach, a clinical significant change is believed
+to have occured if a given change is greater or equal to the minimally
+important difference of the used instrument. Given a tidy dataset of the
+study and a minimally important difference for the Beck Depression
+Inventory (second edition, BDI-II) of 7 points, the study data by Claus
+et al. (2020) may be analyzed as follows:
 
 ``` r
 library(clinicalsignificance)
 
-results <- claus_2020 %>% 
-  clinical_significance(
-    id = id, 
-    time = time, 
-    outcome = bdi, 
-    pre = 1, 
-    post = 4, 
-    reliability = 0.81, 
-    m_functional = 8, 
-    sd_functional = 8, 
-    type = "c"
+cs_results <- claus_2020 |>
+  cs_anchor(
+    id = id,
+    time = time,
+    outcome = bdi,
+    pre = 1,
+    post = 4,
+    mid_improvement = 7
   )
 
-results
-#> Clinical Significance Results (JT)
+cs_results
 #> 
+#> ── Clinical Significance Results ──
+#> 
+#> Individual anchor-based approach with a 7 point decrease in instrument scores
+#> indicating a clinical significant improvement.
 #> Category     |  n | Percent
 #> ---------------------------
-#> Recovered    | 10 |   0.250
-#> Improved     |  9 |   0.225
-#> Unchanged    | 21 |   0.525
-#> Deteriorated |  0 |   0.000
-#> Harmed       |  0 |   0.000
+#> Improved     | 25 |  62.50%
+#> Unchanged    | 11 |  27.50%
+#> Deteriorated |  4 |  10.00%
 ```
 
 You can receive a detailed summary of the analysis by
 
 ``` r
-summary(results)
+summary(cs_results)
 #> 
-#> Clinical Significance Results
+#> ── Clinical Significance Results ──
 #> 
-#> There were 43 participants in the whole dataset of which 40 (93%)
-#> could be included in the analysis.
+#> Individual anchor-based analysis of clinical significance with a 7 point
+#> decrease in instrument scores (bdi) indicating a clinical significant
+#> improvement.
+#> There were 43 participants in the whole dataset of which 40 (93%) could be
+#> included in the analysis.
 #> 
-#> The JT method for calculating cutoffs and reliable change was chosen
-#> and the outcome variable was "bdi".
-#> 
-#> The cutoff type was "c" with a value of 21.6 based on the following
-#> population characteristics (with lower values representing a
-#> beneficial outcome):
-#> 
-#> Population Characteristics
-#> 
-#> M Clinical | SD Clinical | M Functional | SD Functional
-#> -------------------------------------------------------
-#> 35.48      | 8.16        | 8            | 8            
-#> 
-#> 
-#> The instrument's reliability was set to 0.81 
-#> 
-#> Individual Level Results
-#> 
+#> ── Individual Level Results
 #> Category     |  n | Percent
 #> ---------------------------
-#> Recovered    | 10 |   0.250
-#> Improved     |  9 |   0.225
-#> Unchanged    | 21 |   0.525
-#> Deteriorated |  0 |   0.000
-#> Harmed       |  0 |   0.000
+#> Improved     | 25 |  62.50%
+#> Unchanged    | 11 |  27.50%
+#> Deteriorated |  4 |  10.00%
 ```
 
-or plot the results with
+or plot the cs_results with
 
 ``` r
-plot(results)
+plot(cs_results)
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-1.png" width="80%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-7-1.png" width="80%" style="display: block; margin: auto;" />
 
-## Rationale
+### Including Groups
 
-Jacobson et al. (1984) criticized, along with other researchers, that
-the vast majority of research in psychological intervention research is
-based on statistical significance testing. This procedure comes with two
-major disadvantages: first, treatment effects are based on groups and
-lack information on individual participants. Second, a significance test
-lacks practical relevance. One can think of a hypothetical intervention
-that expands life expectancy by 1 day. With enough participants
-incorporated in a significance test, one can virtually guarantee a
-significant result although most would agree that such an intervention
-lacks practical relevance.
+Group-wise results may be obtained by setting the `group` argument
 
-Therefore, Jacobson et al. (1984) postulated an additional procedure
-that categorizes each patient based on his/her individual change. If a
-patient (reliably) moves from the dysfunctional to a functional
-population, this patient’s change is **clinically significant**. This
-case is depicted in the figure below.
+``` r
+cs_results_grouped <- claus_2020 |>
+  cs_anchor(
+    id = id,
+    time = time,
+    outcome = bdi,
+    pre = 1,
+    post = 4,
+    mid_improvement = 7,
+    group = treatment
+  )
 
-Let’s suppose an instrument assessing depressive symptoms. A clinical
-population of patients with a major depression may score on average with
-*M* = 34 and an *SD* = 8 on this instrument. A functional population (in
-this case a sample of people without a major depression) may score on
-average with *M* = 8 and an *SD* = 8 on that same instrument. If now an
-individual patient with major depression scores 32 on the depression
-instrument before and intervention (black point in the clinical
-population) and 12 after an intervention (black point in the functional
-population) and therefore has crossed the cutoff between the two
-populations (the black line in between), then this patient has changed
-clinically significant (if that change is beyond the error of
-measurement of the instrument).
+summary(cs_results_grouped)
+#> 
+#> ── Clinical Significance Results ──
+#> 
+#> Individual anchor-based analysis of clinical significance with a 7 point
+#> decrease in instrument scores (bdi) indicating a clinical significant
+#> improvement.
+#> There were 43 participants in the whole dataset of which 40 (93%) could be
+#> included in the analysis.
+#> 
+#> ── Individual Level Results
+#> Group |     Category |  n | Percent
+#> -----------------------------------
+#> TAU   |     Improved |  8 |  20.00%
+#> TAU   |    Unchanged |  7 |  17.50%
+#> TAU   | Deteriorated |  4 |  10.00%
+#> PA    |     Improved | 17 |  42.50%
+#> PA    |    Unchanged |  4 |  10.00%
+#> PA    | Deteriorated |  0 |   0.00%
+plot(cs_results_grouped)
+```
 
-<img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-8-1.png" width="80%" style="display: block; margin: auto;" />
 
-## References
+### Clinical Significance Categories
 
-<div id="refs" class="references csl-bib-body hanging-indent"
-line-spacing="2">
+The individual categories may be visualized by adjusting the argument
+`show` in the `plot()` function call.
 
-<div id="ref-Jacobson.1984" class="csl-entry">
+``` r
+plot(cs_results, show = category)
+```
 
-Jacobson, N. S., Follette, W. C., & Revenstorf, D. (1984). <span
-class="nocase">Psychotherapy outcome research: Methods for reporting
-variability and evaluating clinical significance</span>. *Behavior
-Therapy*, *15*(4), 336–352.
-<https://doi.org/10.1016/S0005-7894(84)80002-7>
+<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" style="display: block; margin: auto;" />
 
-</div>
+## Contributing
 
-</div>
+We welcome contributions from the R community to enhance the package. If
+you find any bugs, have feature requests, or would like to contribute
+improvements, please open an issue or submit a pull request on GitHub.
+
+## License
+
+This package is released under the GNU General Public License. You are
+free to use and distribute it according to the terms of the license.
+
+------------------------------------------------------------------------
+
+Thank you for using the clinicalsignificance R package! We hope it
+proves to be a valuable tool for assessing clinical significance in your
+medical and healthcare research. If you find it helpful, consider giving
+us a star on GitHub and spreading the word.

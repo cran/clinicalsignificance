@@ -9,12 +9,18 @@
 #'
 #' @format An object of class `tbl_df` with 172 rows and 9 columns.
 #'
-#'   \describe{ \item{id}{Participant ID} \item{age}{Age} \item{sex}{Sex}
+#'   \describe{
+#'   \item{id}{Participant ID}
+#'   \item{age}{Age}
+#'   \item{sex}{Sex}
 #'   \item{treatment}{Treatment (TAU for treatment as usual and PA for placebo
-#'   amplification)} \item{time}{Measurement} \item{bdi}{Beck Depression
-#'   Inventory (2nd Edition) score} \item{shaps}{Snaith-Hamilton Pleasure Scale
-#'   score} \item{who}{WHO-Five Well-Being Index score} \item{hamd}{Hamilton
-#'   Rating Scale for Depression score} }
+#'   amplification)}
+#'   \item{time}{Measurement}
+#'   \item{bdi}{Beck Depression Inventory (2nd Edition) score (lower is better)}
+#'   \item{shaps}{Snaith-Hamilton Pleasure Scale score (higher is better)}
+#'   \item{who}{WHO-Five Well-Being Index score (higher is better)}
+#'   \item{hamd}{Hamilton Rating Scale for Depression score (lower is better)}
+#'   }
 #'
 #' @references
 #' - Claus, B. B., Scherbaum, N., & Bonnet, U. (2020). Effectiveness
@@ -35,9 +41,12 @@
 #'
 #' @format An object of class `tbl_df` with 60 rows and 4 columns.
 #'
-#'   \describe{ \item{subject}{Subject ID} \item{time}{Measurement}
-#'   \item{das}{Dyadic Adjustment Scale score} \item{gds}{Global Distress Scale
-#'   score} }
+#'   \describe{
+#'   \item{subject}{Subject ID}
+#'   \item{time}{Measurement}
+#'   \item{das}{Dyadic Adjustment Scale score (higher is better)}
+#'   \item{gds}{Global Distress Scale score (lower is better)}
+#'   }
 #'
 #' @references
 #' - Jacobson, N. S., Schmaling, K. B., Holtzworth-Munroe, A., Katt,
@@ -70,10 +79,14 @@
 #'individuals) can be expected to have a mean score of M = 8 points with a
 #'standard deviation of SD = 4.
 #'
-#'@format A data frame with 580 rows and 4 variables: \describe{
-#'  \item{\code{subject}}{Participant} \item{\code{treatment}}{Treatment. Either
-#'  Placebo or Intervention.} \item{\code{measurement}}{Number of measurement}
-#'  \item{\code{anxiety}}{Anxiety score, lower is better.} }
+#'@format A data frame with 580 rows and 4 variables:
+#'
+#' \describe{
+#'  \item{\code{subject}}{Participant}
+#'  \item{\code{treatment}}{Treatment. Either Placebo or Intervention}
+#'  \item{\code{measurement}}{Number of measurement}
+#'  \item{\code{anxiety}}{Anxiety score (lower is better)}
+#'  }
 "anxiety_complete"
 
 
@@ -93,8 +106,79 @@
 #'The functional population (i.e., non-anxious individuals) can be expected to
 #'have a mean score of M = 8 points with a standard deviation of SD = 4.
 #'
-#'@format A data frame with 580 rows and 4 variables: \describe{
-#'  \item{\code{subject}}{Participant} \item{\code{treatment}}{Treatment. Either
-#'  Placebo or Intervention.} \item{\code{measurement}}{Number of measurement}
-#'  \item{\code{anxiety}}{Anxiety score, lower is better.} }
+#'@format A data frame with 580 rows and 4 variables:
+#'
+#'  \describe{
+#'  \item{\code{subject}}{Participant}
+#'  \item{\code{treatment}}{Treatment. Either Placebo or Intervention}
+#'  \item{\code{measurement}}{Number of measurement}
+#'  \item{\code{anxiety}}{Anxiety score (lower is better)}
+#'  }
 "anxiety"
+
+
+#'Antidepressant Data
+#'
+#'A fictional dataset used to showcase group-based clinical significance
+#'analyses and analyses with many participants.
+#'
+#'In a fictional clinical trial, the effectiveness of a new antidepressant
+#'should be examined and depressed patients were randomized to one of four
+#'groups:
+#'- A wait list control group that did not receive a medication
+#'- An inactive placebo group, i.e., a group that received a placebo
+#'(inert substance without proposed clinical effect) pill
+#'- An active placebo group, i.e., a group that received a placebo that evokes
+#'side effects like mild nausea or a dry mouth
+#'- The antidepressant group, so the target medication of this trial that should
+#'have a clinical impact on the patients' depressive symptoms
+#'
+#'Suppose they underwent outpatient treatment, depressive symptoms were measured
+#'before and after treatment with the Mind over Mood Depression Inventory
+#'(MoM-DI) by Greenberger & Padesky (2015), and if a patient received a pill,
+#'the clinician and the patient did not know, what type of medicaction they
+#'consumed.
+#'
+#'Further, the minimal important difference for an improvement as measured by
+#'this instrument was agreed to be an 8 point decrease. A deterioration can be
+#'assumed if instrument scores increased by 5 points.
+#'
+#'The functional population (i.e., non-depressed individuals) can be expected to
+#'have a mean score of M = 8 points with a standard deviation of SD = 7.
+#'
+#'@format A tibble with 1140 rows and 4 variables:
+#'
+#'  \describe{
+#'  \item{\code{patient}}{Patient identifier}
+#'  \item{\code{condition}}{Experimental condition}
+#'  \item{\code{measurement}}{Indicator of measurement}
+#'  \item{\code{mom_di}}{Mind over Mood Depression inventory scores
+#'  (lower is better)
+#'  }
+#'}
+#'
+#'@references Greenberger, D., & Padesky, C. A. (2015). Mind over mood, second
+#'  edition (2nd ed.). New York, NY: Guilford Publications.
+"antidepressants"
+
+
+#'Chronic Pain Data
+#'
+#'A reduced version of the data collected by Hechler et al. (2014)
+#'
+#'@format A tibble with 208 rows and 3 variables:
+#'
+#'  \describe{
+#'  \item{\code{patient}}{Patient identifier}
+#'  \item{\code{measurement}}{Indicator of measurement}
+#'  \item{\code{disability}}{Pain-related disability as measured with the PPDI
+#'  (lower is better)
+#'  }
+#'}
+#'
+#'@references Hechler, T., Ruhe, A.‑K., Schmidt, P., Hirsch, J., Wager, J.,
+#'  Dobe, M., Krummenauer, F., & Zernikow, B. (2014). Inpatient Based Intensive
+#'  Interdisciplinary Pain Treatment for Highly Impaired Children with Severe
+#'  Chronic Pain: Randomized Controlled Trial of Efficacy and Economic Effects.
+#'  Pain, 155(1), 118–128. https://doi.org/10.1016/j.pain.2013.09.015
+"hechler_2014"

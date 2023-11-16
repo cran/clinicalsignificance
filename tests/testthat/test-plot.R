@@ -1,37 +1,56 @@
-library(vdiffr)
-test_that("plots are correct", {
-  plot_jt <- plot(clinical_significance(anxiety, subject, measurement, anxiety, pre = 0, post = 3, reliability = 0.80))
-  plot_gln <- plot(clinical_significance(anxiety, subject, measurement, anxiety, pre = 0, post = 3, reliability = 0.80, method = "GLN"))
-  plot_hll <- plot(clinical_significance(anxiety, subject, measurement, anxiety, pre = 0, post = 3, reliability = 0.80, method = "HLL"))
-  plot_en <- plot(clinical_significance(anxiety, subject, measurement, anxiety, pre = 0, post = 3, reliability = 0.80, method = "EN"))
-  plot_nk <- plot(clinical_significance(anxiety, subject, measurement, anxiety, pre = 0, post = 3, reliability = 0.80, reliability_post = 0.90, method = "NK"))
-  plot_ha <- plot(clinical_significance(anxiety, subject, measurement, anxiety, pre = 0, post = 3, reliability = 0.80, method = "HA"))
+claus_jt <- claus_2020 |>
+  cs_distribution(id, time, hamd, pre = 1, post = 4, reliability = 0.80)
 
-  expect_doppelganger("base plot jt", plot_jt)
-  expect_doppelganger("base plot gln", plot_gln)
-  expect_doppelganger("base plot hll", plot_hll)
-  expect_doppelganger("base plot en", plot_en)
-  expect_doppelganger("base plot nk", plot_nk)
-  expect_doppelganger("base plot ha", plot_ha)
-})
+claus_en <- claus_2020 |>
+  cs_distribution(id, time, hamd, pre = 1, post = 4, reliability = 0.80, rci_method = "EN")
 
+claus_ha <- claus_2020 |>
+  cs_distribution(id, time, hamd, pre = 1, post = 4, reliability = 0.80, rci_method = "HA")
 
-test_that("grouping in plots is correct", {
-  group_plot <- plot(clinical_significance(anxiety, subject, measurement, anxiety, pre = 0, post = 3, group = treatment, reliability = 0.80))
+claus_hlm <- claus_2020 |>
+  cs_distribution(id, time, hamd, rci_method = "HLM")
 
-  expect_doppelganger("base plot jt with grouping", group_plot)
-})
+claus_jt_statistical <- claus_2020 |>
+  cs_statistical(id, time, hamd, pre = 1, post = 4, m_functional = 8, sd_functional = 8, cutoff_type = "c", cutoff_method = "JT")
 
+claus_ha_statistical <- claus_2020 |>
+  cs_statistical(id, time, hamd, pre = 1, post = 4, reliability = 0.80, m_functional = 8, sd_functional = 8, cutoff_type = "c", cutoff_method = "HA")
 
-test_that("HLM plots are correct", {
-  plot_trajectory <- plot(clinical_significance(anxiety, subject, measurement, anxiety, method = "HLM"), which = "trajectory")
-  plot_trajectory_grouped <- plot(clinical_significance(anxiety, subject, measurement, anxiety, group = treatment, method = "HLM"), which = "trajectory")
+claus_jt_combined <- claus_2020 |>
+  cs_combined(id, time, hamd, pre = 1, post = 4, reliability = 0.80, m_functional = 8, sd_functional = 8, cutoff_type = "c")
 
-  expect_doppelganger("trajectories ungrouped", plot_trajectory)
-  expect_doppelganger("trajectories grouped", plot_trajectory_grouped)
-})
+claus_jt_combined_grouped <- claus_2020 |>
+  cs_combined(id, time, hamd, group = treatment, pre = 1, post = 4, reliability = 0.80, m_functional = 8, sd_functional = 8, cutoff_type = "c")
+
+claus_ha_combined <- claus_2020 |>
+  cs_combined(id, time, hamd, pre = 1, post = 4, reliability = 0.80, m_functional = 8, sd_functional = 8, cutoff_type = "c", rci_method = "HA")
+
+claus_hlm_combined <- claus_2020 |>
+  cs_combined(id, time, hamd, m_functional = 8, sd_functional = 8, cutoff_type = "c", rci_method = "HLM")
 
 
-test_that("Plot method throws expected errors", {
-  expect_snapshot_error(plot(clinical_significance(anxiety, subject, measurement, anxiety, pre = 0, post = 3, reliability = 0.80), include_cutoff_band = TRUE))
+claus_pct_impr <- claus_2020 |>
+  cs_percentage(id, time, hamd, pre = 1, post = 4, pct_improvement = 0.5)
+
+claus_pct_impr_grouped <- claus_2020 |>
+  cs_percentage(id, time, hamd, pre = 1, post = 4, group = treatment, pct_improvement = 0.5)
+
+claus_pct_impr_det <- claus_2020 |>
+  cs_percentage(id, time, hamd, pre = 1, post = 4, pct_improvement = 0.5)
+
+
+test_that("Plots are created correctly", {
+  vdiffr::expect_doppelganger("Distribution JT Plot", plot(claus_jt))
+  vdiffr::expect_doppelganger("Distribution EN Plot", plot(claus_en))
+  vdiffr::expect_doppelganger("Distribution HA Plot", plot(claus_ha))
+  vdiffr::expect_doppelganger("Distribution HLM Plot", plot(claus_hlm))
+  vdiffr::expect_doppelganger("Statistical JT Plot", plot(claus_jt_statistical))
+  vdiffr::expect_doppelganger("Statistical HA Plot", plot(claus_ha_statistical))
+  vdiffr::expect_doppelganger("Combined JT Plot", plot(claus_jt_combined))
+  vdiffr::expect_doppelganger("Combined HA Plot", plot(claus_ha_combined))
+  vdiffr::expect_doppelganger("Combined HLM Plot", plot(claus_hlm_combined))
+  vdiffr::expect_doppelganger("Combined JT Plot Grouped", plot(claus_jt_combined_grouped))
+  vdiffr::expect_doppelganger("Percentage Plot", plot(claus_pct_impr))
+  vdiffr::expect_doppelganger("Percentage Plot Grouped", plot(claus_pct_impr_grouped))
+  vdiffr::expect_doppelganger("Percentage Plot with ImpDet", plot(claus_pct_impr_det))
 })

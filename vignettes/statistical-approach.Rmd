@@ -1,0 +1,178 @@
+---
+title: "Statistical Approach"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Statistical Approach}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Introduction
+In this tutorial, we will explore the statistical approach to clinical significance using R. The statistical approach is based on the assumption that patients and healthy individuals form two distinct distributions on the same continuum. A clinical significant change is believed to have occurred, if a patients, that belonged to the clinical population before an intervention belongs to the functional/non-clinical population after that intervention. For this, a cutoff between the two distributions can be calculated, which needs to be crossed to fulfill this population change criterion. We will be working with the `antidepressants` and the `claus_2020` datasets, and the `cs_statistical()` function to demonstrate various aspects of this approach.
+
+
+## Prerequisites
+Before we begin, ensure that you have the following prerequisites in place:
+
+- R installed on your computer.
+- Basic understanding of R programming concepts.
+
+
+## Looking at the Datasets
+First, let's have a look at the datasets, which come with the package.
+
+```{r}
+library(clinicalsignificance)
+
+antidepressants
+claus_2020
+```
+
+
+# Statistical Approach
+The `cs_statistical()` function is a tool for assessing clinical significance. It allows you to determine if changes in patient outcomes are practically significant. Let's go through the basic usage and some advanced features of this function.
+
+
+## Basic Analysis
+Let's start with a basic statistical clinical significance analysis using the `antidepressants` dataset. We are interested in the Mind over Mood Depression Inventory (`mom_di`) measurements. For the statistical approach, a functional population must be defined. Suppose, we collected data from a non-clinical sample and determined a mean of 7 points and a standard deviation of also 7 points.
+
+```{r}
+stat_results <- antidepressants |> 
+  cs_statistical(
+    id = patient,
+    time = measurement,
+    outcome = mom_di,
+    m_functional = 7,
+    sd_functional = 7,
+    cutoff_type = "c"
+  )
+```
+
+
+## Handling Warnings
+Sometimes, as in the example above, you may encounter warnings when using this function. You can turn off the warning by explicitly specifying the pre-measurement time point using the pre parameter. This can be helpful when your data lacks clear pre-post measurement labels.
+
+
+```{r}
+# Turning off the warning by specifying pre-measurement time
+stat_results <- antidepressants |>
+  cs_statistical(
+    id = patient,
+    time = measurement,
+    outcome = mom_di,
+    pre = "Before",
+    m_functional = 7,
+    sd_functional = 7,
+    cutoff_type = "c"
+  )
+```
+
+Here's a breakdown of the code:
+
+- `patient`, `measurement`, and `mom_di` represent the patient identifier, assessment time points, and HAM-D scores, respectively.
+- `pre` and `post` specify the time points for the pre and post-assessment.
+- `m_functional` and `sd_functional` define the functional population's mean and standard deviation. This information is used to calculate the population cutoff.
+- `"c"` specifies the population cutoff of choice.
+
+
+## Printing and Summarizing the Results
+```{r}
+# Print the results
+stat_results
+
+# Get a summary
+summary(stat_results)
+```
+
+
+## Visualizing the Results
+Visualizing the results can help you better understand the clinical significance of changes in patient outcomes.
+```{r}
+# Plot the results
+plot(stat_results)
+
+# Show clinical significance categories
+plot(stat_results, show = category)
+```
+
+
+## Data with More Than Two Measurements
+When working with data that has more than two measurements, you must explicitly define the pre and post measurement time points using the `pre` and `post` parameters.
+
+```{r}
+# Clinical significance distribution analysis with more than two measurements
+cs_results <- claus_2020 |>
+  cs_statistical(
+    id = id,
+    time = time,
+    outcome = bdi,
+    pre = 1,
+    post = 4,
+    m_functional = 7,
+    sd_functional = 7,
+    cutoff_type = "c"
+  )
+
+# Display the results
+cs_results
+summary(cs_results)
+plot(cs_results)
+```
+
+
+## Grouped Analysis
+You can also perform a grouped analysis by providing a group column from the data. This is useful when comparing treatment groups or other categories.
+```{r}
+cs_results_grouped <- claus_2020 |>
+  cs_statistical(
+    id = id,
+    time = time,
+    outcome = bdi,
+    pre = 1,
+    post = 4,
+    m_functional = 7,
+    sd_functional = 7,
+    cutoff_type = "c",
+    group = treatment
+  )
+
+# Display and visualize the results
+cs_results_grouped
+plot(cs_results_grouped)
+```
+
+
+## Analyzing Positive Outcomes
+In some cases, higher values of an outcome may be considered better. You can specify this using the `better_is` argument. Let's see an example with the WHO-5 score where higher values are considered better.
+
+```{r}
+# Clinical significance analysis for outcomes where higher values are better
+cs_results_who <- claus_2020 |>
+  cs_statistical(
+    id,
+    time,
+    who,
+    pre = 1,
+    post = 4,
+    m_functional = 7,
+    sd_functional = 7,
+    cutoff_type = "c",
+    better_is = "higher"
+  )
+
+# Display the results
+cs_results_who
+```
+
+
+# Conclusion
+In this tutorial, you've learned how to perform clinical significance analysis using the `cs_statistical()` function in R. This analysis may be crucial for determining the practical importance of changes in patient outcomes. By adjusting thresholds and considering grouped analyses, you can gain valuable insights for healthcare and clinical research applications.
