@@ -1,115 +1,57 @@
 ## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5,
+  fig.align = "center"
 )
 
-## -----------------------------------------------------------------------------
+## ----setup--------------------------------------------------------------------
 library(clinicalsignificance)
 
-antidepressants
-claus_2020
-
-## -----------------------------------------------------------------------------
-# Basic clinical significance distribution analysis
-antidepressants |>
-  cs_distribution(patient, measurement, mom_di, reliability = 0.80)
-
-## -----------------------------------------------------------------------------
-# Turning off the warning by specifying pre-measurement time
-cs_results <- antidepressants |>
-  cs_distribution(
-    patient,
-    measurement,
-    mom_di,
-    pre = "Before",
-    reliability = 0.80
-  )
-
-## -----------------------------------------------------------------------------
-summary(cs_results)
-plot(cs_results)
-plot(cs_results, show = category)
-
-## -----------------------------------------------------------------------------
-# Clinical significance distribution analysis with more than two measurements
-cs_results <- claus_2020 |>
-  cs_distribution(
-    id,
-    time,
-    hamd,
-    pre = 1,
-    post = 4,
-    reliability = 0.80
-  )
-
-# Display the results
-cs_results
-summary(cs_results)
-plot(cs_results)
-
-## -----------------------------------------------------------------------------
-# Clinical significance distribution analysis with a different RCI method
-cs_results_ha <- claus_2020 |>
-  cs_distribution(
-    id,
-    time,
-    hamd,
-    pre = 1,
-    post = 4,
-    reliability = 0.80,
-    rci_method = "HA"
-  )
-
-# Display the results
-summary(cs_results_ha)
-plot(cs_results_ha)
-
-## -----------------------------------------------------------------------------
-# Grouped analysis
-cs_results_grouped <- claus_2020 |>
-  cs_distribution(
-    id,
-    time,
-    hamd,
-    pre = 1,
-    post = 4,
-    group = treatment,
-    reliability = 0.80
-  )
-
-# Display the results
-summary(cs_results_grouped)
-plot(cs_results_grouped)
-
-## -----------------------------------------------------------------------------
-distribution_results_who <- claus_2020 |> 
+## ----jt-method----------------------------------------------------------------
+# Analyze reliable change using the JT method
+dist_jt <- claus_2020 |>
   cs_distribution(
     id = id,
     time = time,
-    outcome = who,
+    outcome = bdi,
     pre = 1,
     post = 4,
-    reliability = 0.85,
-    better_is = "higher"
+    reliability = 0.801
   )
 
-distribution_results_who
+summary(dist_jt)
 
-# And plot the groups
-plot(distribution_results_who)
+## ----jt-method-plot-----------------------------------------------------------
+plot(dist_jt)
 
-## -----------------------------------------------------------------------------
-# Clinical significance distribution analysis with HLM method
-cs_results_hlm <- claus_2020 |>
+## ----ha-method----------------------------------------------------------------
+dist_ha <- claus_2020 |>
   cs_distribution(
-    id,
-    time,
-    hamd,
+    id = id,
+    time = time,
+    outcome = bdi,
+    pre = 1,
+    post = 4,
+    reliability = 0.801,
+    rci_method = "HA"
+  )
+
+summary(dist_ha)
+
+## ----hlm-method---------------------------------------------------------------
+dist_hlm <- claus_2020 |>
+  cs_distribution(
+    id = id,
+    time = time,
+    outcome = bdi,
     rci_method = "HLM"
   )
 
-# Display the results
-summary(cs_results_hlm)
-plot(cs_results_hlm)
+summary(dist_hlm)
+
+## ----hlm-method-plot----------------------------------------------------------
+plot(dist_hlm)
 

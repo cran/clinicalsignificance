@@ -1,128 +1,52 @@
 ## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5,
+  fig.align = "center"
 )
 
-## -----------------------------------------------------------------------------
+## ----setup--------------------------------------------------------------------
 library(clinicalsignificance)
 
-antidepressants
-claus_2020
-
-## -----------------------------------------------------------------------------
-combined_results <- antidepressants |> 
-  cs_combined(
-    id = patient,
-    time = measurement,
-    outcome = mom_di,
-    m_functional = 7,
-    sd_functional = 7,
-    cutoff_type = "c",
-    mid_improvement = 8
-  )
-
-## -----------------------------------------------------------------------------
-# Turning off the warning by specifying pre-measurement time
-combined_results <- antidepressants |> 
-  cs_combined(
-    id = patient,
-    time = measurement,
-    outcome = mom_di,
-    pre = "Before",
-    m_functional = 7,
-    sd_functional = 7,
-    cutoff_type = "c",
-    mid_improvement = 8
-  )
-
-## -----------------------------------------------------------------------------
-# Print the results
-combined_results
-
-# Get a summary
-summary(combined_results)
-
-## -----------------------------------------------------------------------------
-# Plot the results
-plot(combined_results)
-
-# Show clinical significance categories
-plot(combined_results, show = category)
-
-## -----------------------------------------------------------------------------
-# Clinical significance distribution analysis with more than two measurements
-cs_results <- claus_2020 |>
+## ----jt-combined--------------------------------------------------------------
+# Perform the JT combined analysis
+jt_combined <- claus_2020 |>
   cs_combined(
     id = id,
     time = time,
     outcome = bdi,
     pre = 1,
     post = 4,
-    m_functional = 7,
-    sd_functional = 7,
-    cutoff_type = "c",
-    mid_improvement = 8
+    m_functional = 7.69,
+    sd_functional = 7.52,
+    reliability = 0.801
   )
 
-# Display the results
-cs_results
-summary(cs_results)
-plot(cs_results)
+# Display the summary of results
+summary(jt_combined)
 
-## -----------------------------------------------------------------------------
-cs_results_grouped <- claus_2020 |>
+## ----jt-combined-plot---------------------------------------------------------
+plot(jt_combined, show_group = "category")
+
+## ----anchor-combined----------------------------------------------------------
+# Perform the anchor-based combined analysis
+anchor_combined <- claus_2020 |>
   cs_combined(
     id = id,
     time = time,
     outcome = bdi,
     pre = 1,
     post = 4,
-    m_functional = 7,
-    sd_functional = 7,
-    cutoff_type = "c",
-    mid_improvement = 8,
-    group = treatment
+    m_functional = 7.69,
+    sd_functional = 7.52,
+    mid_improvement = 7
   )
 
-# Display and visualize the results
-cs_results_grouped
-plot(cs_results_grouped)
+# Display the summary of results
+summary(anchor_combined)
 
-## -----------------------------------------------------------------------------
-# Clinical significance analysis for outcomes where higher values are better
-cs_results_who <- claus_2020 |>
-  cs_combined(
-    id,
-    time,
-    who,
-    pre = 1,
-    post = 4,
-    m_functional = 7,
-    sd_functional = 7,
-    cutoff_type = "c",
-    mid_improvement = 8,
-    better_is = "higher"
-  )
-
-# Display the results
-cs_results_who
-
-## -----------------------------------------------------------------------------
-jt_results <- antidepressants |> 
-  cs_combined(
-    id = patient,
-    time = measurement,
-    outcome = mom_di,
-    pre = "Before",
-    m_functional = 7,
-    sd_functional = 7,
-    cutoff_type = "c",
-    reliability = 0.80
-  )
-
-# Summarize and visualize the results
-summary(jt_results)
-plot(jt_results)
-plot(jt_results, show = category)
+## ----anchor-combined-plot-----------------------------------------------------
+plot(anchor_combined, show_group = "category")
 

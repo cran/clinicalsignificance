@@ -1,50 +1,18 @@
 ## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5,
+  fig.align = "center"
 )
 
-## -----------------------------------------------------------------------------
+## ----setup--------------------------------------------------------------------
 library(clinicalsignificance)
 
-antidepressants
-claus_2020
-
-## -----------------------------------------------------------------------------
-anchor_results <- antidepressants |> 
-  cs_anchor(
-    id = patient,
-    time = measurement,
-    outcome = mom_di,
-    mid_improvement = 7
-  )
-
-## -----------------------------------------------------------------------------
-anchor_results <- antidepressants |> 
-  cs_anchor(
-    id = patient,
-    time = measurement,
-    outcome = mom_di,
-    pre = "Before",
-    mid_improvement = 7
-  )
-
-## -----------------------------------------------------------------------------
-# Print the results
-anchor_results
-
-# Get a summary
-summary(anchor_results)
-
-## -----------------------------------------------------------------------------
-# Plot the results
-plot(anchor_results)
-
-# Show clinical significance categories
-plot(anchor_results, show = category)
-
-## -----------------------------------------------------------------------------
-claus_results <- claus_2020 |> 
+## ----individual-basic---------------------------------------------------------
+# Analyze individual change from the first to the fourth measurement
+anchor_individual <- claus_2020 |> 
   cs_anchor(
     id = id,
     time = time,
@@ -54,11 +22,14 @@ claus_results <- claus_2020 |>
     mid_improvement = 7
   )
 
-summary(claus_results)
-plot(claus_results)
+# Print the summary table
+anchor_individual
 
-## -----------------------------------------------------------------------------
-anchor_results_grouped <- claus_2020 |> 
+## ----individual-plot----------------------------------------------------------
+plot(anchor_individual)
+
+## ----individual-grouped-------------------------------------------------------
+anchor_grouped <- claus_2020 |> 
   cs_anchor(
     id = id,
     time = time,
@@ -69,13 +40,14 @@ anchor_results_grouped <- claus_2020 |>
     group = treatment
   )
 
-anchor_results_grouped
+# Print results by group
+summary(anchor_grouped)
 
-# And plot the groups
-plot(anchor_results_grouped)
+# Plot results by group
+plot(anchor_grouped)
 
-## -----------------------------------------------------------------------------
-anchor_results_who <- claus_2020 |> 
+## ----positive-outcome---------------------------------------------------------
+anchor_positive <- claus_2020 |> 
   cs_anchor(
     id = id,
     time = time,
@@ -86,28 +58,10 @@ anchor_results_who <- claus_2020 |>
     better_is = "higher"
   )
 
-anchor_results_who
+plot(anchor_positive)
 
-# And plot the groups
-plot(anchor_results_who)
-
-## -----------------------------------------------------------------------------
-anchor_results_group_level <- claus_2020 |> 
-  cs_anchor(
-    id = id,
-    time = time,
-    outcome = bdi,
-    pre = 1,
-    post = 4,
-    mid_improvement = 7,
-    target = "group"
-  )
-
-## -----------------------------------------------------------------------------
-summary(anchor_results_group_level)
-
-## -----------------------------------------------------------------------------
-claus_2020 |> 
+## ----group-within-------------------------------------------------------------
+anchor_group_within <- claus_2020 |> 
   cs_anchor(
     id = id,
     time = time,
@@ -119,16 +73,20 @@ claus_2020 |>
     group = treatment
   )
 
-## -----------------------------------------------------------------------------
-claus_2020 |> 
+anchor_group_within
+
+## ----group-between------------------------------------------------------------
+anchor_group_between <- claus_2020 |> 
   cs_anchor(
     id = id,
     time = time,
     outcome = bdi,
-    post = 4,
+    post = 4, # Only post is needed here, as we compare change scores
     mid_improvement = 7,
     target = "group",
     group = treatment,
     effect = "between"
   )
+
+anchor_group_between
 

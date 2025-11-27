@@ -11,8 +11,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 
+<meta name="date" content="2025-11-26" />
 
-<title>Combined Approach</title>
+<title>Analyzing Clinical Significance: The Combined Approach</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -48,8 +49,9 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -60,7 +62,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -336,377 +338,217 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 
-<h1 class="title toc-ignore">Combined Approach</h1>
+<h1 class="title toc-ignore">Analyzing Clinical Significance: The
+Combined Approach</h1>
+<h4 class="date">2025-11-26</h4>
 
 
 
-<div id="introduction" class="section level1">
-<h1>Introduction</h1>
-<p>In this tutorial, we will explore the combined approach to clinical
-significance using R. The combined approaches use the anchor- or
-distribution-based approach in addition to the statistical approach.
-This is obviously stricter than the two methods on their own, but offers
-a more detailed interpretation. We will be working with the
-<code>antidepressants</code> and the <code>claus_2020</code> datasets,
-and the <code>cs_combined()</code> function to demonstrate various
-aspects of this approach.</p>
-<div id="prerequisites" class="section level2">
-<h2>Prerequisites</h2>
-<p>Before we begin, ensure that you have the following prerequisites in
-place:</p>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The combined approach represents the most rigorous method for
+assessing clinical significance. It provides a more nuanced picture of
+patient outcomes by requiring <strong>two criteria</strong> to be met
+simultaneously:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Magnitude of Change</strong>: The change must be
+sufficiently large, either by being statistically reliable
+(distribution-based) or practically meaningful (anchor-based).</li>
+<li><strong>End-State Functioning</strong>: The patient must cross the
+threshold from a dysfunctional or “clinical” population to a functional
+or “non-clinical” one (statistical approach).</li>
+</ol>
+<p>This dual requirement allows for a richer classification of outcomes,
+distinguishing between patients who have merely “Improved” and those who
+have truly “Recovered”. This vignette demonstrates how to use the
+<code>cs_combined()</code> function to apply these powerful models.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(clinicalsignificance)</span></code></pre></div>
+</div>
+<div id="the-classic-jacobson-truax-jt-approach" class="section level2">
+<h2>The Classic Jacobson &amp; Truax (JT) Approach</h2>
+<p>The most common combined method, proposed by Jacobson and Truax
+(1991), integrates the <strong>distribution-based</strong> and
+<strong>statistical</strong> approaches. A patient’s change is
+considered clinically significant if:</p>
+<ol style="list-style-type: decimal">
+<li>The change is <strong>reliable</strong> (i.e., it exceeds the
+measurement error of the instrument).</li>
+<li>The patient’s final score falls within the range of a functional
+population.</li>
+</ol>
+<div id="example-analysis" class="section level3">
+<h3>Example Analysis</h3>
+<p>We will again use the <code>claus_2020</code> dataset. To perform
+this analysis, we need summary statistics for a functional
+(non-clinical) population on the BDI-II (<code>m_functional</code>,
+<code>sd_functional</code>) and an estimate of the instrument’s
+reliability.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># Perform the JT combined analysis</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>jt_combined <span class="ot">&lt;-</span> claus_2020 <span class="sc">|&gt;</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="fu">cs_combined</span>(</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>    <span class="at">id =</span> id,</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>    <span class="at">time =</span> time,</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>    <span class="at">outcome =</span> bdi,</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>    <span class="at">pre =</span> <span class="dv">1</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>    <span class="at">post =</span> <span class="dv">4</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>    <span class="at">m_functional =</span> <span class="fl">7.69</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>    <span class="at">sd_functional =</span> <span class="fl">7.52</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>    <span class="at">reliability =</span> <span class="fl">0.801</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  )</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co"># Display the summary of results</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="fu">summary</span>(jt_combined)</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt; ---- Clinical Significance Results ----</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="co">#&gt; Approach:     Distribution-based</span></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="co">#&gt; RCI Method:   JT</span></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="co">#&gt; N (original): 43</span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="co">#&gt; N (used):     40</span></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a><span class="co">#&gt; Percent used: 93.02%</span></span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a><span class="co">#&gt; Outcome:      bdi</span></span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a><span class="co">#&gt; Cutoff Type:  a</span></span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a><span class="co">#&gt; Cutoff:       19.16</span></span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a><span class="co">#&gt; Outcome:      bdi</span></span>
+<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a><span class="co">#&gt; Reliability:  0.801</span></span>
+<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a><span class="co">#&gt; -- Cutoff Descriptives</span></span>
+<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a><span class="co">#&gt; M Clinical | SD Clinical | M Functional | SD Functional</span></span>
+<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------------</span></span>
+<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a><span class="co">#&gt; 35.48      |        8.16 |         7.69 |          7.52</span></span>
+<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-36"><a href="#cb2-36" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-37"><a href="#cb2-37" tabindex="-1"></a><span class="co">#&gt; -- Results</span></span>
+<span id="cb2-38"><a href="#cb2-38" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-39"><a href="#cb2-39" tabindex="-1"></a><span class="co">#&gt; Category     |  N | Percent</span></span>
+<span id="cb2-40"><a href="#cb2-40" tabindex="-1"></a><span class="co">#&gt; ---------------------------</span></span>
+<span id="cb2-41"><a href="#cb2-41" tabindex="-1"></a><span class="co">#&gt; Recovered    | 10 |  25.00%</span></span>
+<span id="cb2-42"><a href="#cb2-42" tabindex="-1"></a><span class="co">#&gt; Improved     |  8 |  20.00%</span></span>
+<span id="cb2-43"><a href="#cb2-43" tabindex="-1"></a><span class="co">#&gt; Unchanged    | 22 |  55.00%</span></span>
+<span id="cb2-44"><a href="#cb2-44" tabindex="-1"></a><span class="co">#&gt; Deteriorated |  0 |   0.00%</span></span>
+<span id="cb2-45"><a href="#cb2-45" tabindex="-1"></a><span class="co">#&gt; Harmed       |  0 |   0.00%</span></span></code></pre></div>
+</div>
+<div id="visualizing-the-jt-approach" class="section level3">
+<h3>Visualizing the JT Approach</h3>
+<p>The plot for a combined analysis is particularly informative. It
+includes both the shaded area for reliable change (from the
+distribution-based approach) and the cutoff lines for population status
+(from the statistical approach).</p>
 <ul>
-<li>R installed on your computer.</li>
-<li>Basic understanding of R programming concepts.</li>
+<li><strong>Dashed Lines</strong>: The cutoff separating the clinical
+(right/top) and functional (left/bottom) populations.</li>
+<li><strong>Shaded Area</strong>: The zone of “no reliable change”.</li>
 </ul>
-</div>
-<div id="looking-at-the-datasets" class="section level2">
-<h2>Looking at the Datasets</h2>
-<p>First, let’s have a look at the datasets, which come with the
-package.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(clinicalsignificance)</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>antidepressants</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1,110 × 4</span></span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="co">#&gt;    patient condition measurement mom_di</span></span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="co">#&gt;    &lt;chr&gt;   &lt;fct&gt;     &lt;fct&gt;        &lt;dbl&gt;</span></span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="co">#&gt;  1 S001    Wait List Before          50</span></span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="co">#&gt;  2 S001    Wait List After           36</span></span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="co">#&gt;  3 S002    Wait List Before          40</span></span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="co">#&gt;  4 S002    Wait List After           32</span></span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="co">#&gt;  5 S003    Wait List Before          38</span></span>
-<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="co">#&gt;  6 S003    Wait List After           41</span></span>
-<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="co">#&gt;  7 S004    Wait List Before          29</span></span>
-<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a><span class="co">#&gt;  8 S004    Wait List After           44</span></span>
-<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a><span class="co">#&gt;  9 S005    Wait List Before          37</span></span>
-<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a><span class="co">#&gt; 10 S005    Wait List After           45</span></span>
-<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a><span class="co">#&gt; # ℹ 1,100 more rows</span></span>
-<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a>claus_2020</span>
-<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a><span class="co">#&gt; # A tibble: 172 × 9</span></span>
-<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a><span class="co">#&gt;       id   age sex    treatment  time   bdi shaps   who  hamd</span></span>
-<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a><span class="co">#&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;fct&gt;  &lt;fct&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
-<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a><span class="co">#&gt;  1     1    54 Male   TAU           1    33     9     0    25</span></span>
-<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a><span class="co">#&gt;  2     1    54 Male   TAU           2    28     6     3    17</span></span>
-<span id="cb1-24"><a href="#cb1-24" tabindex="-1"></a><span class="co">#&gt;  3     1    54 Male   TAU           3    28     9     7    13</span></span>
-<span id="cb1-25"><a href="#cb1-25" tabindex="-1"></a><span class="co">#&gt;  4     1    54 Male   TAU           4    27     8     3    13</span></span>
-<span id="cb1-26"><a href="#cb1-26" tabindex="-1"></a><span class="co">#&gt;  5     2    52 Female PA            1    26    11     2    15</span></span>
-<span id="cb1-27"><a href="#cb1-27" tabindex="-1"></a><span class="co">#&gt;  6     2    52 Female PA            2    26    10     0    16</span></span>
-<span id="cb1-28"><a href="#cb1-28" tabindex="-1"></a><span class="co">#&gt;  7     2    52 Female PA            3    25    10     0     7</span></span>
-<span id="cb1-29"><a href="#cb1-29" tabindex="-1"></a><span class="co">#&gt;  8     2    52 Female PA            4    19     9     3    11</span></span>
-<span id="cb1-30"><a href="#cb1-30" tabindex="-1"></a><span class="co">#&gt;  9     3    54 Male   PA            1    15     2     0    28</span></span>
-<span id="cb1-31"><a href="#cb1-31" tabindex="-1"></a><span class="co">#&gt; 10     3    54 Male   PA            2    13     5     9    17</span></span>
-<span id="cb1-32"><a href="#cb1-32" tabindex="-1"></a><span class="co">#&gt; # ℹ 162 more rows</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">plot</span>(jt_combined, <span class="at">show_group =</span> <span class="st">&quot;category&quot;</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; Ignoring unknown labels:</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt; • colour : &quot;Group&quot;</span></span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
+<p>The resulting categories are interpreted as follows: -
+<strong>Recovered</strong> (blue): Patients who showed a reliable
+improvement <em>and</em> ended up in the functional range. -
+<strong>Improved</strong> (light green): Patients who showed a reliable
+improvement but remained in the clinical range. -
+<strong>Unchanged</strong> (yellow): Patients with no reliable change,
+regardless of their population status. - <strong>Deteriorated</strong>
+(orange): Patients who showed a reliable worsening but remained in the
+clinical range. - <strong>Harmed</strong> (dark green): Patients who
+showed a reliable worsening <em>and</em> moved from the functional to
+the clinical range.</p>
 </div>
 </div>
-<div id="claus-wager-bonnet-approach" class="section level1">
-<h1>Claus, Wager &amp; Bonnet Approach</h1>
-<p>This approach combines the statistical and anchor-based approach. The
-<code>cs_combinedl()</code> function is a tool for assessing clinical
-significance in this way. It allows you to determine if changes in
-patient outcomes are practically significant. Let’s go through the basic
-usage and some advanced features of this function.</p>
-<div id="basic-analysis" class="section level2">
-<h2>Basic Analysis</h2>
-<p>Let’s start with a basic statistical clinical significance analysis
-using the <code>antidepressants</code> dataset. We are interested in the
-Mind over Mood Depression Inventory (<code>mom_di</code>) measurements.
-For the statistical approach, a functional population must be defined.
-Suppose, we collected data from a non-clinical sample and determined a
-mean of 7 points and a standard deviation of also 7 points. Furthermore,
-an MID of 8 points will be regarded as minimally important.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>combined_results <span class="ot">&lt;-</span> antidepressants <span class="sc">|&gt;</span> </span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="fu">cs_combined</span>(</span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>    <span class="at">id =</span> patient,</span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>    <span class="at">time =</span> measurement,</span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>    <span class="at">outcome =</span> mom_di,</span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>    <span class="at">m_functional =</span> <span class="dv">7</span>,</span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>    <span class="at">sd_functional =</span> <span class="dv">7</span>,</span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>    <span class="at">cutoff_type =</span> <span class="st">&quot;c&quot;</span>,</span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>    <span class="at">mid_improvement =</span> <span class="dv">8</span></span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  )</span>
-<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt; ℹ Your &quot;Before&quot; was set as pre measurement and and your &quot;After&quot; as post.</span></span>
-<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt; • If that is not correct, please specify the pre measurement with the argument</span></span>
-<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt;   &quot;pre&quot;.</span></span></code></pre></div>
-</div>
-<div id="handling-warnings" class="section level2">
-<h2>Handling Warnings</h2>
-<p>Sometimes, as in the example above, you may encounter warnings when
-using this function. You can turn off the warning by explicitly
-specifying the pre-measurement time point using the pre parameter. This
-can be helpful when your data lacks clear pre-post measurement
-labels.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Turning off the warning by specifying pre-measurement time</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>combined_results <span class="ot">&lt;-</span> antidepressants <span class="sc">|&gt;</span> </span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="fu">cs_combined</span>(</span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>    <span class="at">id =</span> patient,</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>    <span class="at">time =</span> measurement,</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>    <span class="at">outcome =</span> mom_di,</span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>    <span class="at">pre =</span> <span class="st">&quot;Before&quot;</span>,</span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>    <span class="at">m_functional =</span> <span class="dv">7</span>,</span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>    <span class="at">sd_functional =</span> <span class="dv">7</span>,</span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>    <span class="at">cutoff_type =</span> <span class="st">&quot;c&quot;</span>,</span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>    <span class="at">mid_improvement =</span> <span class="dv">8</span></span>
-<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  )</span></code></pre></div>
-<p>Here’s a breakdown of the code:</p>
-<ul>
-<li><code>patient</code>, <code>measurement</code>, and
-<code>mom_di</code> represent the patient identifier, assessment time
-points, and HAM-D scores, respectively.</li>
-<li><code>pre</code> and <code>post</code> specify the time points for
-the pre and post-assessment.</li>
-<li><code>m_functional</code> and <code>sd_functional</code> define the
-functional population’s mean and standard deviation. This information is
-used to calculate the population cutoff.</li>
-<li><code>&quot;c&quot;</code> specifies the population cutoff of choice.</li>
-<li><code>mid_improvement</code> sets the for improvement to 8.</li>
-</ul>
-</div>
-<div id="printing-and-summarizing-the-results" class="section level2">
-<h2>Printing and Summarizing the Results</h2>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Print the results</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>combined_results</span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; ── Clinical Significance Results ──</span></span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; Combined approach using the anchor-based and statistical approach.</span></span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; Category     |   n | Percent</span></span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; ----------------------------</span></span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt; Recovered    | 166 |  29.91%</span></span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; Improved     | 150 |  27.03%</span></span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; Unchanged    | 175 |  31.53%</span></span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; Deteriorated |  52 |   9.37%</span></span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; Harmed       |  12 |   2.16%</span></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a></span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co"># Get a summary</span></span>
-<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="fu">summary</span>(combined_results)</span>
-<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt; ── Clinical Significance Results ──</span></span>
-<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt; Combined analysis of clinical significance using the anchor-based and</span></span>
-<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a><span class="co">#&gt; statistical approach method for calculating the RCI and population cutoffs.</span></span>
-<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a><span class="co">#&gt; There were 555 participants in the whole dataset of which 555 (100%) could be</span></span>
-<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a><span class="co">#&gt; included in the analysis.</span></span>
-<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a><span class="co">#&gt; The outcome was mom_di and the MID was set to 8.</span></span>
-<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a><span class="co">#&gt; The cutoff type was c with a value of 19.72 based on the following sumamry</span></span>
-<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a><span class="co">#&gt; statistics:</span></span>
-<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a><span class="co">#&gt; ── Population Characteristics</span></span>
-<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a><span class="co">#&gt; M Clinical | SD Clinical | M Functional | SD Functional</span></span>
-<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------------</span></span>
-<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a><span class="co">#&gt; 34.73      |        8.26 |            7 |             7</span></span>
+<div id="the-claus-wager-bonnet-cwb-approach" class="section level2">
+<h2>The Claus, Wager &amp; Bonnet (CWB) Approach</h2>
+<p>As an alternative, <code>clinicalsignificance</code> allows you to
+combine the <strong>anchor-based</strong> and
+<strong>statistical</strong> approaches. This method is useful when a
+well-established Minimal Important Difference (MID) is available and may
+offer a more practically interpretable criterion for change than
+statistical reliability.</p>
+<p>Here, a patient’s change is clinically significant if: 1. The change
+is <strong>meaningful</strong> (i.e., it meets or exceeds the MID). 2.
+The patient’s final score falls within the range of a functional
+population.</p>
+<div id="example-analysis-1" class="section level3">
+<h3>Example Analysis</h3>
+<p>We use the same functional population data as before but replace the
+<code>reliability</code> argument with <code>mid_improvement</code>.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Perform the anchor-based combined analysis</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>anchor_combined <span class="ot">&lt;-</span> claus_2020 <span class="sc">|&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="fu">cs_combined</span>(</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>    <span class="at">id =</span> id,</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>    <span class="at">time =</span> time,</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>    <span class="at">outcome =</span> bdi,</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>    <span class="at">pre =</span> <span class="dv">1</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>    <span class="at">post =</span> <span class="dv">4</span>,</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>    <span class="at">m_functional =</span> <span class="fl">7.69</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>    <span class="at">sd_functional =</span> <span class="fl">7.52</span>,</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>    <span class="at">mid_improvement =</span> <span class="dv">7</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>  )</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co"># Display the summary of results</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="fu">summary</span>(anchor_combined)</span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; ---- Clinical Significance Results ----</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co">#&gt; Approach:            Distribution-based</span></span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt; RCI Method:          CWB</span></span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a><span class="co">#&gt; N (original):        43</span></span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a><span class="co">#&gt; N (used):            40</span></span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a><span class="co">#&gt; Percent used:        93.02%</span></span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a><span class="co">#&gt; Outcome:             bdi</span></span>
+<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a><span class="co">#&gt; Cutoff Type:         a</span></span>
+<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a><span class="co">#&gt; Cutoff:              19.16</span></span>
+<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a><span class="co">#&gt; Outcome:             bdi</span></span>
+<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a><span class="co">#&gt; MID (Improvement):   7</span></span>
+<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a><span class="co">#&gt; MID (Deterioration): 7</span></span>
+<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a><span class="co">#&gt; -- Cutoff Descriptives</span></span>
 <span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a><span class="co">#&gt; ── Individual Level Results</span></span>
-<span id="cb4-34"><a href="#cb4-34" tabindex="-1"></a><span class="co">#&gt; Category     |   n | Percent</span></span>
-<span id="cb4-35"><a href="#cb4-35" tabindex="-1"></a><span class="co">#&gt; ----------------------------</span></span>
-<span id="cb4-36"><a href="#cb4-36" tabindex="-1"></a><span class="co">#&gt; Recovered    | 166 |  29.91%</span></span>
-<span id="cb4-37"><a href="#cb4-37" tabindex="-1"></a><span class="co">#&gt; Improved     | 150 |  27.03%</span></span>
-<span id="cb4-38"><a href="#cb4-38" tabindex="-1"></a><span class="co">#&gt; Unchanged    | 175 |  31.53%</span></span>
-<span id="cb4-39"><a href="#cb4-39" tabindex="-1"></a><span class="co">#&gt; Deteriorated |  52 |   9.37%</span></span>
-<span id="cb4-40"><a href="#cb4-40" tabindex="-1"></a><span class="co">#&gt; Harmed       |  12 |   2.16%</span></span></code></pre></div>
+<span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a><span class="co">#&gt; M Clinical | SD Clinical | M Functional | SD Functional</span></span>
+<span id="cb4-34"><a href="#cb4-34" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------------</span></span>
+<span id="cb4-35"><a href="#cb4-35" tabindex="-1"></a><span class="co">#&gt; 35.48      |        8.16 |         7.69 |          7.52</span></span>
+<span id="cb4-36"><a href="#cb4-36" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-37"><a href="#cb4-37" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-38"><a href="#cb4-38" tabindex="-1"></a><span class="co">#&gt; -- Results</span></span>
+<span id="cb4-39"><a href="#cb4-39" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-40"><a href="#cb4-40" tabindex="-1"></a><span class="co">#&gt; Category     |  N | Percent</span></span>
+<span id="cb4-41"><a href="#cb4-41" tabindex="-1"></a><span class="co">#&gt; ---------------------------</span></span>
+<span id="cb4-42"><a href="#cb4-42" tabindex="-1"></a><span class="co">#&gt; Recovered    | 13 |  32.50%</span></span>
+<span id="cb4-43"><a href="#cb4-43" tabindex="-1"></a><span class="co">#&gt; Improved     | 12 |  30.00%</span></span>
+<span id="cb4-44"><a href="#cb4-44" tabindex="-1"></a><span class="co">#&gt; Unchanged    | 11 |  27.50%</span></span>
+<span id="cb4-45"><a href="#cb4-45" tabindex="-1"></a><span class="co">#&gt; Deteriorated |  4 |  10.00%</span></span>
+<span id="cb4-46"><a href="#cb4-46" tabindex="-1"></a><span class="co">#&gt; Harmed       |  0 |   0.00%</span></span></code></pre></div>
+<p>Notice the subtle shift in classifications: with the MID as the
+criterion, more patients are categorized as “Improved” or “Recovered”
+compared to the stricter reliability criterion of the JT approach in
+this specific example.</p>
 </div>
-<div id="visualizing-the-results" class="section level2">
-<h2>Visualizing the Results</h2>
-<p>Visualizing the results can help you better understand the clinical
-significance of changes in patient outcomes.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Plot the results</span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">plot</span>(combined_results)</span></code></pre></div>
-<p><img role="img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASAAAAEgCAMAAAAjXV6yAAAAsVBMVEUAAAAAADoAAGYAOpAAZrYDAwMaGhozMzM6AAA6ADo6AGY6kNtNTU1NTW5NTY5NbqtNjshmAABmtv9uTU1uTW5uTY5ubo5ubqtuq+SOTU2OTW6OTY6Obk2ObquOyP+QOgCQkDqQ2/+rbk2rbm6rjk2r5OSr5P+2ZgC2///Ijk3I///W1tbbkDrb///kq27k///o6Ojr6+v/tmb/yI7/25D/5Kv//7b//8j//9v//+T///+ZYAY+AAAACXBIWXMAAA7DAAAOwwHHb6hkAAAR40lEQVR4nO2dCZfbNg6A2TRxs5tpu2l22+luO2nTIweniZVmkoz+/w9b6yIBEACpwxIlC+9lbMk0BXwGQFJCJFPuoopZWoHcZQcUkR1QRHZAEdkBRWQHFJGegApWhN29Wph4k0mOg5tYVo6nfwmA7l9cff1nWX768erbdxsFxPOpAR3igF7flH9/++7+xU359l/bBCTwqQB1fBRAn/73pnu5+8+bLQKS+JwAHRJC7O6H36sQu/vhXfnpv6dQK786iexv65OjLIfjsWulAHp2U9E5RVkLqJJZftkRTXp0IvrPKb6SknTrOt6DtgVI45M2in36uSYzVw6aGZDqP4nD/Os6xO5fXG9wFNPjKxHQaQL0zZttzoMi+ScRECfnU3xOQBE+Fw8oxidPQPMl6SifCwd0jPK5bEBWBtTxuWhAVgbk+OQJaJ4kbWVAns8FA7IyIMDncgE563U+FwvIW6/zyRPQlEnaGMN8BqzX+WwekDEcIWi9zucyASHrdT4XCQhbr/PJE9CUSVrjEwAK+WwfUCDUep3P5QEKrNf5bAcQDqVqi+0ktF7nkyegAU1wMq63uE4Y63U+FwaIs17nsxJAzFymJJ+nAGKt1/lUTYrsAXGTmZJ+Hs9BvHvofE5NivwA0R8/CVD0OEL86HzssbgUQEL8RPjYqpfsAaXkoNhxhPiJ8SnWAWj8cYT4ifLJE9D0J+0F+49RPhsGBMNOAnCM8tkuIJi4RQLHKJ8xgPKWZq5Yi15fJwrTZz8Vhv748yRp70GKj0T9J9MQm2QUS+GjXJuHx9kmoLaF6j8yINTLlgGpfGRAuJfsAE03D7L2FGkiHxEQ6WW7gGo+PCFXX6fz2TYgKwPy9XU6n00DsjIgUF+n88kT0NCT9nhR31jf8sGYYH2dzmczgEwnbg+yHjsSqq/T+WwXkJUB4fo6nc8aAPEFLBFAVgZE6ut0PnkCSjifKgFqNwPrWT4BIEGVzQByW0L8UD60iaTK5gAJ8RPwIU1EVfICFFzSCi564V7a8b1tUr0I8dMkIjQpQk1kbbMCFFwUDcZv3AvOzhABBdQ1FAAp2u6AZD7rA9RtlO3wrwJCOFRAqrZZASoooILhU6Wpbq9BawwA4EjmzyEfD0jXNi9AepMQEBJsPQMIR10HKKLKdgAR6xGSgwwopkqWgBj3qKXlgxN3+xblG5KDDtzJxaZJVNscAbEB5AV/3G4hPsYkFSBGjpMpIDMIEDA8ACQWIG4LUDCYwS0LYogCOsDwCge6mLY5AuJyEDPcgw04TBFAB5iuYa4+WjHXQW2zBMTthr92mQ7oYEVAUVXyBCQ0GQjoYEVAiarkD8j4pbpvYvxob+CZ+epvs79+e6DLeP82VZXsAXGZtHQfmM5+B8VtUM/CkqxKEqDqBm9z3f1lHkDpqiQBent1Uy51F7zOVmbXcEBpqiQDuvv+p5vF7oLnjA33+FzTZRcCiMx8EJ8JAd3/9seLm9nugkcVcSSCPUx9Xb3fvaTX1w3QC8jb6yq85roLXroHMfU/euKB/jOhB9X3L4MedF5ACRfePR+DBnA9rgif6QC9varkOqu74IWeAvGoBYh9VUkIsWaYn+sueFMAUgoQe6uSDGiBeZChE6AuGSmA2mGNuy6G+ax2Ju2TNE7NBcjOZbu+YAE1Q1jIp2rZT5UVA8JmJwPqqcp6AR2HAeqrSqaAgtPxfqPl05wM7DKLf+tzkEHDf/vSW5UsATE/Nd1v7ZG6jvgOTR37KrtSQHYHpAIK843xIxp8Z+BAF3bLH4aemMsPUEzxCB+DP/bjO8MnFsq5AlKb0KgxdBRz56QRIOYw2wQUpJU0QNxhtgDIq+rjC4/cBg3nfn974d00gz5/nNXmIGai2L4LpoeA0AF71hFNjQaqkiegQgRkFUDg+tfqAbEKk8Dv9kFAbtIMtjpABzq2YUDBEQ2tps0IEPuTwp1CDuokGOc5PgEgZozfAKCgRecwRwzoEEADgLgBa9WAeMXxKWcM6EC9Zd2AxBzU7m8Vx638wr1GdKTX4Olq3rr/UBf21e0pmXkE2cpqFOsINYDwr46mOp35LSznVkigB4mq+M9xS7e1FkBWAcTVr7aAIqV86wJkXIy5v07jcNw6uh2+fqwLPzfXDqrSyLtVAUJ8SGINM7BP0ge38HCfwdhCVCiLVeWgQH+/gxmi3AkzUL/KAlIOMGom/fHpd9XL+wevlgdkFUCwvnfjgEJn93wMGtENGuZByjEQkTFMPT7ZORjQrTvUw9lCzAv+8dH8BoxReGf7zu+D7oZ7BnvGe5AmA83vCcgOA4RKrHDP0wBKkIHmaxfegREFvAyGARkYTe1uxm8QIPeXAgp0IDtEQCcX+vjUKCloPCD863J8qNB0ja9jhKncdUaYe1UCHegOEdDLh+Xtg1e3Sg4aLbUu8k5oIiypAzuPtNQOfgcW6rGHYnUQW5ZBDvr8/OF5RzHZg/xSw7kI40Ew+ZCRvukk9KBAlcEeVEfYkzMP84HSxpD/A0/Ow/vlRPCCCIGluu+LV4XVIQHQ5+dP3n/xaxVoZwREBf/ceOkJHcnApQZdzTsmzCmBUBX9cwVQ+eHxaQ708su/FgNkhwEi0+TzAYrLeQFZDpAm7eQZDVjBah7QaKJwXYDAGoPyiRPqggu5ITqRawzdkk5uJgGqlxtP5gXkmoR88PAVvhsKKEVbFtBtNX5VA9kSgPgK3qwAnXc1L/l1u5+9eVSLAW9ZWILn0w6zcHeE4LmCXAEhtTGfZnxnbj/Wvvgb2DlCpL7FuVTJ+UzK9bckQGcNMR2QtY9EQOAGdhQQ6mQGQOdM0iogywFyoo1pCE8UkHEhxisTBRSV4YC0HGQpIJYQx8dZTwGB3v1L26QoxJ9rSUCy2BAQd31QBeSs10wfCeilUU8FnQ1Ql2A4QPD64NKAqjXYbYzQGQBZHlA9jB/ggI9X83jVbrjVPEuIzUHMVgDo8/Pv2j/zArICIBxi1G9I/arbn+geRPAXmq0AUD0J+vxcG8LOAcgOA8RZuDlABp3feHRE4RRdp3Y9GDKQAVxdE0EV/xEA5L67PKDWNwAg5DQxQBBLgffrp11LeHzKyn9zjYBwhZkCyJufCAgrxY9iH5+6Q8xz6VkHdMgOUJqMABSog/hYXCR/kK/Nk1U7pRS+SMoyfLohfglAwQ9Gpj2gOsqt36FL1U2oiyiiXPZJ0DYDQJQPBNSt3y8ZUDDpQfV1KqBeUjCXnkeckz4jIKwVMyl0OYhcMx0FqICpXPitcgEExfKA2IvKYCe6dO/MhltlOKCtERBNP4mAiksBFOTnCsEj9NQZS4d5210/ZU7O+x1gNS81zjcH6XxaDzrgfa3UO9Dcz+BhSvCgwM/SlE0FdPfs6uoMd38J+XhATH1vB6jIDlB126m7f/859V3wGD4O0CFk0wEilnLWa5IGyPgoTAD0d0Xl9c3Ed6Di+HTzoICPH/d1GBw0wgdbL/LxDBNCrPGiae+CJ9+i7pF7QGxnFai2g/fE414oHnc8vBURtnHkDlTX5C544OcAr2XB7w9e7aOTVF7CvB66bec/1bbsNsBPgo/RcU1crwL20tiTAujTj9flpHfB4+OrEXB/Nmdnu9EFCDRaXc2DiDLyap6NMdckAdDds5uK0nQ5SOXDXllttoLj8G6F5oT4pZ+yiYAaPhPeBU/lwxQvdIDC4+QBqLmP4s1k86AIHxaQaS7wwNzADVkSILDtyGZ7uiPGJ6gPCo1l12IQAvseEKrfZgooyoe7R2QqoO4oeAf8dvaAlGeYt3xo8cJlAVKeYd7NnwNAxhgwxhuag2In7Qs60hu/4PeCAS8GSHmGuVufsuUvxBu6pyIIjmS0S89uZ0l3ho3nBmQVQG79fsGArALI+KvxR3K2zEuhIaGCG7cUsgZkFUC1du50R7vl+fjVUS9CzJZ0uoPlMy8gqwDq6sd4QN6CAr4lFICdAwDJ9swFyCqADroHXQQgqwDy95foTtobmIMKh6V7MTCn4MW7EYZ/0oN/yQSQVQCR56OhUSzoqLGWGaMAjUYT7D5CR7kA8haHgOjz4yAgya6tAQLmB4CC5+sZ/59WnCkyIBhbqwUEzaeAOD6NAD6EUHccTMDQDKzyySkHIfsJoPD5jB6QN4SdwCFEBW0sz6R1ZRcAhO3HgJjnV8o2bxQQsT/+/FNjDB7cTTg6wxALV/NeE/Cx7697yQMQNT/+/NNmFEN8gmkeTNKhIE2wj8FesgAUmI+efyoDCs3bJqDQfPj8UxmQ60AEJNIxDqFhVvSZAWLMh88/FQGBLpBtzkJ4ypVn5aujAkJttxnkIM58+PxTQcgDYkGAEEBMEwYQ1wuj7AKAeOujfOgDYjcLSHCPKJ9AcWBZFykls9OHkDHM7XH8F7p3JdzCL3MAkuInyie1bgfzoflIvsES7gQ3oX52RkCS/aS+juGjjC4bAiQC0C4c1nzIYyOQwgSQ6SkZAZIJHFUHKhAgbFi7xx+HWN+HEFDWnCkHqSLX153kIH9EFOnsEo4SfNxu4f1w5yijJvQgLYaOEf8Bbsh4EDpO8DGMExpRTEeLDfNqkonzKeQcFMaD9LExo0rwzgpI59PzAbGyi2gOVrhTrjHrFwAU8Z+eD4jdHqAIHxEQYCIA8jwMFtK6G6LwV3MBFOMjAYJMUN8MH0KI8nGTHJqncwCkTgPDAkSOjzSTRlaWrM0EEP9VbH1EpgakzpPFAkRyfXDDgNSFRDu+cy2wLZLi0MiSTysoBwlfxdZHZFpAYgABPlwLamGKB8lNGA9SrE9oMhkgMYAgH6ZFYOJGAYkBhPiELUIT+RNmnenGmFUCEgMI8wlaMCYKp1whJzlNsTkoA0BiABE+tAVnYco56amsT2gyCSAxgCgf0oIq1A8QPzj1sj6hyRSAxAAK+OAWoUZyDkJb8GTgKOsTmkwASAygkA9qMdK21QASA4jhA1uMtW0tgMQA4viAFmMVV3OQQVfCRh1nLCAxgFg+vsVoxTXpZkQZnA8SA4jn41ooxm0KkBhAAp+uhWYcpzixdTWAxACS+LQtVOMYxamxUdsyyUFiAIl8LKyvE2ybAlAeo5gYQDIfC+vr0hVfJyAxgBQ+9hjlwypuuCteyZ0sc8JMDCCNjz1G+cTKXxLSL+lEaH9mQGIAqXxofV3MNixrAiQGkM6H1tdxFLYPSLv+PgrQmnKQAkitTxgHKN22JUYxdPcXGZBev7FhQPgueCKgSH3LdIrP0Ek/QPgOVBKgWP3PhgHhu+ANrK9bsUQB4bvg8U7So77uzD/+oh4kAkqoH9twko7noJT6sQ0DwnfB4+MrXj+2YUCxeVBa/dhwQHA6nCcgJCyfhPqxwYqjBdUKAaXWj10qoLT6sTGK9wOUsJydFVBa/VgPrRjpk4NSTojMCSixfixNq8mui43tpJgMUGr9WJpW2wOUXD+WptUk86CcclB6/ViaVuudKPKAetSPTav4DJ1MAahX/VgfxdUgWQ+g3vVjqYrraXY1gPrXj10WoAH1Y6lJehOAhtSPJY9iG8hBg+rHLmiYH1Y/djGA+OsXX01x/WL0c4Mm6wT1MsmdF/KxbQc0Ryc7oD69THlzk03KDigiO6CI7IAisgOKyHhA6MrrIOEe6DpAqlKvsZ3cv7j6+k/Uy2hAuAJtiLAPdB0gb0+Ux3by+qaq94G9jAaEqz+GCPtA1/5y9/1PN2O1qb5eYptGA8L1Q4M1gw90HST3v/1x+t1HdnL3w+9ViMFeRgPCFWgDJXyga295e10FxshOqgdfnujAXrLwIOaBrgPUuJ/Cg95RZ84gB7EPdO0rzTM9r8fmoJ9rMpPmIFyBNkTYB7oO0uRmdCevbxpfvJ5uFBs/D2If6DpAppgHnb7+zZtp50Fblx1QRHZAEdkBRWQHFJEdUERyBfT5eX2Z/otfl1YkX0BPqpfbB68WViRzQB+ffrewIvkD+vDPX8yDV1XILeJNmQN6+eDVh8cPq83Tn9sv/5pfkXwB1Un65DQfHp+i7H3lPYvEW76AnrTvPvzjNJLdNvcWeKJ+5yyyFkBLRFctKwH0frEJ0UoAfX5+cqFFKK0EUJ20F/GiXAFlIzugiOyAIrIDisgOKCI7oIjsgCKyA4rIDigiO6CI/B9K+MEdBB0ztAAAAABJRU5ErkJggg==" /><!-- --></p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a></span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co"># Show clinical significance categories</span></span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="fu">plot</span>(combined_results, <span class="at">show =</span> category)</span></code></pre></div>
-<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
-</div>
-<div id="data-with-more-than-two-measurements" class="section level2">
-<h2>Data with More Than Two Measurements</h2>
-<p>When working with data that has more than two measurements, you must
-explicitly define the pre and post measurement time points using the
-<code>pre</code> and <code>post</code> parameters.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Clinical significance distribution analysis with more than two measurements</span></span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>cs_results <span class="ot">&lt;-</span> claus_2020 <span class="sc">|&gt;</span></span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="fu">cs_combined</span>(</span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>    <span class="at">id =</span> id,</span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>    <span class="at">time =</span> time,</span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>    <span class="at">outcome =</span> bdi,</span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>    <span class="at">pre =</span> <span class="dv">1</span>,</span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>    <span class="at">post =</span> <span class="dv">4</span>,</span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>    <span class="at">m_functional =</span> <span class="dv">7</span>,</span>
-<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>    <span class="at">sd_functional =</span> <span class="dv">7</span>,</span>
-<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>    <span class="at">cutoff_type =</span> <span class="st">&quot;c&quot;</span>,</span>
-<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>    <span class="at">mid_improvement =</span> <span class="dv">8</span></span>
-<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>  )</span>
-<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a></span>
-<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co"># Display the results</span></span>
-<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>cs_results</span>
-<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt; ── Clinical Significance Results ──</span></span>
-<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt; Combined approach using the anchor-based and statistical approach.</span></span>
-<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt; Category     |  n | Percent</span></span>
-<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt; ---------------------------</span></span>
-<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt; Recovered    | 11 |  27.50%</span></span>
-<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt; Improved     |  9 |  22.50%</span></span>
-<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt; Unchanged    | 17 |  42.50%</span></span>
-<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; Deteriorated |  3 |   7.50%</span></span>
-<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt; Harmed       |  0 |   0.00%</span></span>
-<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="fu">summary</span>(cs_results)</span>
-<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt; ── Clinical Significance Results ──</span></span>
-<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co">#&gt; Combined analysis of clinical significance using the anchor-based and</span></span>
-<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="co">#&gt; statistical approach method for calculating the RCI and population cutoffs.</span></span>
-<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt; There were 43 participants in the whole dataset of which 40 (93%) could be</span></span>
-<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt; included in the analysis.</span></span>
-<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt; The outcome was bdi and the MID was set to 8.</span></span>
-<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt; The cutoff type was c with a value of 20.15 based on the following sumamry</span></span>
-<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt; statistics:</span></span>
-<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt; ── Population Characteristics</span></span>
-<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a><span class="co">#&gt; M Clinical | SD Clinical | M Functional | SD Functional</span></span>
-<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------------</span></span>
-<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a><span class="co">#&gt; 35.48      |        8.16 |            7 |             7</span></span>
-<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-45"><a href="#cb7-45" tabindex="-1"></a><span class="co">#&gt; ── Individual Level Results</span></span>
-<span id="cb7-46"><a href="#cb7-46" tabindex="-1"></a><span class="co">#&gt; Category     |  n | Percent</span></span>
-<span id="cb7-47"><a href="#cb7-47" tabindex="-1"></a><span class="co">#&gt; ---------------------------</span></span>
-<span id="cb7-48"><a href="#cb7-48" tabindex="-1"></a><span class="co">#&gt; Recovered    | 11 |  27.50%</span></span>
-<span id="cb7-49"><a href="#cb7-49" tabindex="-1"></a><span class="co">#&gt; Improved     |  9 |  22.50%</span></span>
-<span id="cb7-50"><a href="#cb7-50" tabindex="-1"></a><span class="co">#&gt; Unchanged    | 17 |  42.50%</span></span>
-<span id="cb7-51"><a href="#cb7-51" tabindex="-1"></a><span class="co">#&gt; Deteriorated |  3 |   7.50%</span></span>
-<span id="cb7-52"><a href="#cb7-52" tabindex="-1"></a><span class="co">#&gt; Harmed       |  0 |   0.00%</span></span>
-<span id="cb7-53"><a href="#cb7-53" tabindex="-1"></a><span class="fu">plot</span>(cs_results)</span></code></pre></div>
-<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
-</div>
-<div id="grouped-analysis" class="section level2">
-<h2>Grouped Analysis</h2>
-<p>You can also perform a grouped analysis by providing a group column
-from the data. This is useful when comparing treatment groups or other
-categories.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>cs_results_grouped <span class="ot">&lt;-</span> claus_2020 <span class="sc">|&gt;</span></span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="fu">cs_combined</span>(</span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>    <span class="at">id =</span> id,</span>
-<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>    <span class="at">time =</span> time,</span>
-<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>    <span class="at">outcome =</span> bdi,</span>
-<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>    <span class="at">pre =</span> <span class="dv">1</span>,</span>
-<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>    <span class="at">post =</span> <span class="dv">4</span>,</span>
-<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>    <span class="at">m_functional =</span> <span class="dv">7</span>,</span>
-<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>    <span class="at">sd_functional =</span> <span class="dv">7</span>,</span>
-<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>    <span class="at">cutoff_type =</span> <span class="st">&quot;c&quot;</span>,</span>
-<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>    <span class="at">mid_improvement =</span> <span class="dv">8</span>,</span>
-<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>    <span class="at">group =</span> treatment</span>
-<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>  )</span>
-<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a></span>
-<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="co"># Display and visualize the results</span></span>
-<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>cs_results_grouped</span>
-<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="co">#&gt; ── Clinical Significance Results ──</span></span>
-<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="co">#&gt; Combined approach using the anchor-based and statistical approach.</span></span>
-<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="co">#&gt; Group |     Category |  n | Percent</span></span>
-<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a><span class="co">#&gt; -----------------------------------</span></span>
-<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="co">#&gt; TAU   |    Recovered |  4 |  10.00%</span></span>
-<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a><span class="co">#&gt; TAU   |     Improved |  2 |   5.00%</span></span>
-<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a><span class="co">#&gt; TAU   |    Unchanged | 10 |  25.00%</span></span>
-<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a><span class="co">#&gt; TAU   | Deteriorated |  3 |   7.50%</span></span>
-<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a><span class="co">#&gt; TAU   |       Harmed |  0 |   0.00%</span></span>
-<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a><span class="co">#&gt; PA    |    Recovered |  7 |  17.50%</span></span>
-<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a><span class="co">#&gt; PA    |     Improved |  7 |  17.50%</span></span>
-<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a><span class="co">#&gt; PA    |    Unchanged |  7 |  17.50%</span></span>
-<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a><span class="co">#&gt; PA    | Deteriorated |  0 |   0.00%</span></span>
-<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a><span class="co">#&gt; PA    |       Harmed |  0 |   0.00%</span></span>
-<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a><span class="fu">plot</span>(cs_results_grouped)</span></code></pre></div>
-<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
-</div>
-<div id="analyzing-positive-outcomes" class="section level2">
-<h2>Analyzing Positive Outcomes</h2>
-<p>In some cases, higher values of an outcome may be considered better.
-You can specify this using the <code>better_is</code> argument. Let’s
-see an example with the WHO-5 score where higher values are considered
-better.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># Clinical significance analysis for outcomes where higher values are better</span></span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>cs_results_who <span class="ot">&lt;-</span> claus_2020 <span class="sc">|&gt;</span></span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  <span class="fu">cs_combined</span>(</span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>    id,</span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>    time,</span>
-<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>    who,</span>
-<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>    <span class="at">pre =</span> <span class="dv">1</span>,</span>
-<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>    <span class="at">post =</span> <span class="dv">4</span>,</span>
-<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>    <span class="at">m_functional =</span> <span class="dv">7</span>,</span>
-<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>    <span class="at">sd_functional =</span> <span class="dv">7</span>,</span>
-<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>    <span class="at">cutoff_type =</span> <span class="st">&quot;c&quot;</span>,</span>
-<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>    <span class="at">mid_improvement =</span> <span class="dv">8</span>,</span>
-<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>    <span class="at">better_is =</span> <span class="st">&quot;higher&quot;</span></span>
-<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>  )</span>
-<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a></span>
-<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a><span class="co"># Display the results</span></span>
-<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>cs_results_who</span>
-<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a><span class="co">#&gt; ── Clinical Significance Results ──</span></span>
-<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a><span class="co">#&gt; Combined approach using the anchor-based and statistical approach.</span></span>
-<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a><span class="co">#&gt; Category     |  n | Percent</span></span>
-<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a><span class="co">#&gt; ---------------------------</span></span>
-<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a><span class="co">#&gt; Recovered    | 10 |  25.00%</span></span>
-<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a><span class="co">#&gt; Improved     |  1 |   2.50%</span></span>
-<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a><span class="co">#&gt; Unchanged    | 29 |  72.50%</span></span>
-<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a><span class="co">#&gt; Deteriorated |  0 |   0.00%</span></span>
-<span id="cb9-28"><a href="#cb9-28" tabindex="-1"></a><span class="co">#&gt; Harmed       |  0 |   0.00%</span></span></code></pre></div>
+<div id="visualizing-the-cwb-approach" class="section level3">
+<h3>Visualizing the CWB Approach</h3>
+<p>The plot is interpreted similarly, but the shaded area is now defined
+by the MID instead of the Reliable Change Index.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">plot</span>(anchor_combined, <span class="at">show_group =</span> <span class="st">&quot;category&quot;</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt; Ignoring unknown labels:</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; • colour : &quot;Group&quot;</span></span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
 </div>
 </div>
-<div id="jacobson-truax-approach" class="section level1">
-<h1>Jacobson &amp; Truax Approach</h1>
-<p>The Jacobson &amp; Truax approach combines the statistical with the
-distribution-based approach. For this, let’s suppose that the
-reliability of the MoM-DI is 0.80.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>jt_results <span class="ot">&lt;-</span> antidepressants <span class="sc">|&gt;</span> </span>
-<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="fu">cs_combined</span>(</span>
-<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>    <span class="at">id =</span> patient,</span>
-<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>    <span class="at">time =</span> measurement,</span>
-<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>    <span class="at">outcome =</span> mom_di,</span>
-<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>    <span class="at">pre =</span> <span class="st">&quot;Before&quot;</span>,</span>
-<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>    <span class="at">m_functional =</span> <span class="dv">7</span>,</span>
-<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>    <span class="at">sd_functional =</span> <span class="dv">7</span>,</span>
-<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>    <span class="at">cutoff_type =</span> <span class="st">&quot;c&quot;</span>,</span>
-<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>    <span class="at">reliability =</span> <span class="fl">0.80</span></span>
-<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>  )</span>
-<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a></span>
-<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a><span class="co"># Summarize and visualize the results</span></span>
-<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a><span class="fu">summary</span>(jt_results)</span>
-<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a><span class="co">#&gt; ── Clinical Significance Results ──</span></span>
-<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a><span class="co">#&gt; Combined analysis of clinical significance using the JT and statistical</span></span>
-<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a><span class="co">#&gt; approach method for calculating the RCI and population cutoffs.</span></span>
-<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a><span class="co">#&gt; There were 555 participants in the whole dataset of which 555 (100%) could be</span></span>
-<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a><span class="co">#&gt; included in the analysis.</span></span>
-<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a><span class="co">#&gt; The outcome was mom_di and the reliability was set to 0.8.</span></span>
-<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a><span class="co">#&gt; The cutoff type was c with a value of 19.72 based on the following sumamry</span></span>
-<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a><span class="co">#&gt; statistics:</span></span>
-<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a><span class="co">#&gt; ── Population Characteristics</span></span>
-<span id="cb10-27"><a href="#cb10-27" tabindex="-1"></a><span class="co">#&gt; M Clinical | SD Clinical | M Functional | SD Functional</span></span>
-<span id="cb10-28"><a href="#cb10-28" tabindex="-1"></a><span class="co">#&gt; -------------------------------------------------------</span></span>
-<span id="cb10-29"><a href="#cb10-29" tabindex="-1"></a><span class="co">#&gt; 34.73      |        8.26 |            7 |             7</span></span>
-<span id="cb10-30"><a href="#cb10-30" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-31"><a href="#cb10-31" tabindex="-1"></a><span class="co">#&gt; ── Individual Level Results</span></span>
-<span id="cb10-32"><a href="#cb10-32" tabindex="-1"></a><span class="co">#&gt; Category     |   n | Percent</span></span>
-<span id="cb10-33"><a href="#cb10-33" tabindex="-1"></a><span class="co">#&gt; ----------------------------</span></span>
-<span id="cb10-34"><a href="#cb10-34" tabindex="-1"></a><span class="co">#&gt; Recovered    | 159 |  28.65%</span></span>
-<span id="cb10-35"><a href="#cb10-35" tabindex="-1"></a><span class="co">#&gt; Improved     | 115 |  20.72%</span></span>
-<span id="cb10-36"><a href="#cb10-36" tabindex="-1"></a><span class="co">#&gt; Unchanged    | 237 |  42.70%</span></span>
-<span id="cb10-37"><a href="#cb10-37" tabindex="-1"></a><span class="co">#&gt; Deteriorated |  34 |   6.13%</span></span>
-<span id="cb10-38"><a href="#cb10-38" tabindex="-1"></a><span class="co">#&gt; Harmed       |  10 |   1.80%</span></span>
-<span id="cb10-39"><a href="#cb10-39" tabindex="-1"></a><span class="fu">plot</span>(jt_results)</span></code></pre></div>
-<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">plot</span>(jt_results, <span class="at">show =</span> category)</span></code></pre></div>
-<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
-</div>
-<div id="conclusion" class="section level1">
-<h1>Conclusion</h1>
-<p>In this tutorial, you’ve learned how to perform clinical significance
-analysis using the <code>cs_combined()</code> function in R. This
-analysis may be crucial for determining the practical importance of
-changes in patient outcomes. By adjusting thresholds and considering
-grouped analyses, you can gain valuable insights for healthcare and
-clinical research applications.</p>
+<div id="summary-and-next-steps" class="section level2">
+<h2>Summary and Next Steps</h2>
+<p>The combined approach offers a powerful and nuanced assessment of
+treatment outcomes by considering both the magnitude of change and the
+patient’s final functional status.</p>
+<ul>
+<li>The <strong>Jacobson &amp; Truax (JT) approach</strong> is the
+classic standard, requiring a reliable change and a shift in population
+status.</li>
+<li>The <strong>Claus, Wager &amp; Bonnet (CWB) approach</strong> is a
+valuable alternative when a meaningful MID is known, defining change in
+practical rather than purely statistical terms.</li>
+</ul>
+<p>Choosing between them depends on the available information
+(reliability vs. MID) and the specific research question.</p>
 </div>
 
 

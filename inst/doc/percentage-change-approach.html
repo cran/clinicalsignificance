@@ -11,8 +11,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 
+<meta name="date" content="2025-11-26" />
 
-<title>Percentage-Change Approach to Clinical Significance in R</title>
+<title>Analyzing Clinical Significance: The Percentage-Change Approach</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -48,8 +49,9 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -60,7 +62,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -336,320 +338,162 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 
-<h1 class="title toc-ignore">Percentage-Change Approach to Clinical
-Significance in R</h1>
+<h1 class="title toc-ignore">Analyzing Clinical Significance: The
+Percentage-Change Approach</h1>
+<h4 class="date">2025-11-26</h4>
 
 
 
-<div id="introduction" class="section level1">
-<h1>Introduction</h1>
-<p>In this tutorial, we will explore the percentage-change approach to
-clinical significance using R. The percentage-change approach is
-centered around a predefined relative change, expressed in percent, that
-needs to be achieved in order to inferr a clinically significant change.
-If, for instance, the percentage-change cutoff is believed to be 30%,
-and a patient demonstrated a score change of at least 30%, then this
-change is believed to be clinically significant. We will be working with
-the <code>antidepressants</code> and <code>claus_2020</code> datasets,
-and the <code>cs_percentage()</code> function to demonstrate various
-aspects of this approach.</p>
-<div id="prerequisites" class="section level2">
-<h2>Prerequisites</h2>
-<p>Before we begin, ensure that you have the following prerequisites in
-place:</p>
-<ul>
-<li>R installed on your computer.</li>
-<li>Basic understanding of R programming concepts.</li>
-</ul>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The percentage-change approach defines clinical significance based on
+the <strong>relative change</strong> in a patient’s score from baseline.
+This method is common in clinical trials where a specific reduction in
+symptoms, such as “a 50% improvement,” is a primary endpoint for
+defining treatment response.</p>
+<p>A change is considered clinically significant if it meets or exceeds
+a predefined <strong>Percentage-Change Cutoff (PCC)</strong>. For
+example, if the PCC is 50% (or 0.5), any patient who shows at least a
+50% reduction in symptoms would be classified as “Improved”.</p>
+<p>A key consideration for this method is that it is <strong>highly
+dependent on the patient’s baseline score</strong>. A 10-point drop is a
+50% improvement for a patient starting at 20 points, but only a 25%
+improvement for a patient starting at 40 points. This characteristic
+should be kept in mind when interpreting the results.</p>
+<p>This vignette demonstrates how to use the
+<code>cs_percentage()</code> function to apply this approach.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(clinicalsignificance)</span></code></pre></div>
 </div>
-<div id="looking-at-the-datasets" class="section level2">
-<h2>Looking at the Datasets</h2>
-<p>First, let’s have a look at the datasets, which come with the
-package.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(clinicalsignificance)</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>antidepressants</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1,110 × 4</span></span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="co">#&gt;    patient condition measurement mom_di</span></span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="co">#&gt;    &lt;chr&gt;   &lt;fct&gt;     &lt;fct&gt;        &lt;dbl&gt;</span></span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="co">#&gt;  1 S001    Wait List Before          50</span></span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="co">#&gt;  2 S001    Wait List After           36</span></span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="co">#&gt;  3 S002    Wait List Before          40</span></span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="co">#&gt;  4 S002    Wait List After           32</span></span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="co">#&gt;  5 S003    Wait List Before          38</span></span>
-<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="co">#&gt;  6 S003    Wait List After           41</span></span>
-<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="co">#&gt;  7 S004    Wait List Before          29</span></span>
-<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a><span class="co">#&gt;  8 S004    Wait List After           44</span></span>
-<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a><span class="co">#&gt;  9 S005    Wait List Before          37</span></span>
-<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a><span class="co">#&gt; 10 S005    Wait List After           45</span></span>
-<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a><span class="co">#&gt; # ℹ 1,100 more rows</span></span>
-<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a>claus_2020</span>
-<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a><span class="co">#&gt; # A tibble: 172 × 9</span></span>
-<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a><span class="co">#&gt;       id   age sex    treatment  time   bdi shaps   who  hamd</span></span>
-<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a><span class="co">#&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;fct&gt;  &lt;fct&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
-<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a><span class="co">#&gt;  1     1    54 Male   TAU           1    33     9     0    25</span></span>
-<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a><span class="co">#&gt;  2     1    54 Male   TAU           2    28     6     3    17</span></span>
-<span id="cb1-24"><a href="#cb1-24" tabindex="-1"></a><span class="co">#&gt;  3     1    54 Male   TAU           3    28     9     7    13</span></span>
-<span id="cb1-25"><a href="#cb1-25" tabindex="-1"></a><span class="co">#&gt;  4     1    54 Male   TAU           4    27     8     3    13</span></span>
-<span id="cb1-26"><a href="#cb1-26" tabindex="-1"></a><span class="co">#&gt;  5     2    52 Female PA            1    26    11     2    15</span></span>
-<span id="cb1-27"><a href="#cb1-27" tabindex="-1"></a><span class="co">#&gt;  6     2    52 Female PA            2    26    10     0    16</span></span>
-<span id="cb1-28"><a href="#cb1-28" tabindex="-1"></a><span class="co">#&gt;  7     2    52 Female PA            3    25    10     0     7</span></span>
-<span id="cb1-29"><a href="#cb1-29" tabindex="-1"></a><span class="co">#&gt;  8     2    52 Female PA            4    19     9     3    11</span></span>
-<span id="cb1-30"><a href="#cb1-30" tabindex="-1"></a><span class="co">#&gt;  9     3    54 Male   PA            1    15     2     0    28</span></span>
-<span id="cb1-31"><a href="#cb1-31" tabindex="-1"></a><span class="co">#&gt; 10     3    54 Male   PA            2    13     5     9    17</span></span>
-<span id="cb1-32"><a href="#cb1-32" tabindex="-1"></a><span class="co">#&gt; # ℹ 162 more rows</span></span></code></pre></div>
-</div>
-</div>
-<div id="percentage-change-approach" class="section level1">
-<h1>Percentage-Change Approach</h1>
-<p>The <code>cs_percentage()</code> function is a tool for assessing
-clinical significance. It allows you to determine if changes in patient
-outcomes are practically significant. Let’s go through the basic usage
-and some advanced features of this function.</p>
 <div id="basic-analysis" class="section level2">
 <h2>Basic Analysis</h2>
-<p>Let’s start with a basic clinical significance distribution analysis
-using the <code>antidepressants</code> dataset. We are interested in the
-Mind over Mood Depression Inventory (<code>mom_di</code>) measurements
-and want to set the percentage cutoff for an improvement to a value of
-0.3.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>pct_results <span class="ot">&lt;-</span> antidepressants <span class="sc">|&gt;</span> </span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="fu">cs_percentage</span>(</span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>    <span class="at">id =</span> patient,</span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>    <span class="at">time =</span> measurement,</span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>    <span class="at">outcome =</span> mom_di,</span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>    <span class="at">pct_improvement =</span> <span class="fl">0.3</span></span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  )</span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt; ℹ Your &quot;Before&quot; was set as pre measurement and and your &quot;After&quot; as post.</span></span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt; • If that is not correct, please specify the pre measurement with the argument</span></span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt;   &quot;pre&quot;.</span></span></code></pre></div>
+<p>Let’s analyze the <code>claus_2020</code> dataset. A common benchmark
+for depression treatment trials is a 50% reduction in symptom scores. We
+will set this as our <code>pct_improvement</code> cutoff.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># Analyze change using a 50% improvement cutoff</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>pct_results <span class="ot">&lt;-</span> claus_2020 <span class="sc">|&gt;</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="fu">cs_percentage</span>(</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>    <span class="at">id =</span> id,</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>    <span class="at">time =</span> time,</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>    <span class="at">outcome =</span> bdi,</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>    <span class="at">pre =</span> <span class="dv">1</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>    <span class="at">post =</span> <span class="dv">4</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>    <span class="at">pct_improvement =</span> <span class="fl">0.5</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  )</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="fu">summary</span>(pct_results)</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt; ---- Clinical Significance Results ----</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt; Approach:                 Percentage-based</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt; Percentage Improvement:   50.00%</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="co">#&gt; Percentage Deterioration: 50.00%</span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="co">#&gt; Better is:                Lower</span></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="co">#&gt; N (original):             43</span></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="co">#&gt; N (used):                 40</span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="co">#&gt; Percent used:             93.02%</span></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a><span class="co">#&gt; Outcome:                  bdi</span></span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a><span class="co">#&gt; Category     |  N | Percent</span></span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a><span class="co">#&gt; ---------------------------</span></span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a><span class="co">#&gt; Improved     | 11 |  27.50%</span></span>
+<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a><span class="co">#&gt; Unchanged    | 29 |  72.50%</span></span>
+<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a><span class="co">#&gt; Deteriorated |  0 |   0.00%</span></span></code></pre></div>
+<p>The summary shows that based on this 50% criterion, about 28% of
+patients are classified as having improved.</p>
+<div id="visualizing-the-results" class="section level3">
+<h3>Visualizing the Results</h3>
+<p>The plot for the percentage-change approach looks similar to those
+for the anchor- and distribution-based methods. However, the shaded area
+is now determined by the percentage-change cutoff relative to each
+individual’s starting score. This means the boundaries of the
+“unchanged” area are not parallel lines.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">plot</span>(pct_results)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; Ignoring unknown labels:</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt; • colour : &quot;Group&quot;</span></span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
 </div>
-<div id="handling-warnings" class="section level2">
-<h2>Handling Warnings</h2>
-<p>Sometimes, as in the example above, you may encounter warnings when
-using this function. You can turn off the warning by explicitly
-specifying the pre-measurement time point using the pre parameter. This
-can be helpful when your data lacks clear pre-post measurement
-labels.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Turning off the warning by specifying pre-measurement time</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>pct_results <span class="ot">&lt;-</span> antidepressants <span class="sc">|&gt;</span></span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="fu">cs_percentage</span>(</span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>    <span class="at">id =</span> patient,</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>    <span class="at">time =</span> measurement,</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>    <span class="at">outcome =</span> mom_di,</span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>    <span class="at">pre =</span> <span class="st">&quot;Before&quot;</span>,</span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>    <span class="at">pct_improvement =</span> <span class="fl">0.5</span></span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  )</span></code></pre></div>
-<p>Here’s a breakdown of the code:</p>
-<ul>
-<li><code>patient</code>, <code>measurement</code>, and
-<code>mom_di</code> represent the patient identifier, assessment time
-points, and HAM-D scores, respectively.</li>
-<li><code>pre</code> and <code>post</code> specify the time points for
-the pre and post-assessment.</li>
-<li><code>pct_improvement</code> sets the percentage change threshold
-for improvement to 30%.</li>
-</ul>
-</div>
-<div id="printing-and-summarizing-the-results" class="section level2">
-<h2>Printing and Summarizing the Results</h2>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Print the results</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>pct_results</span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; ── Clinical Significance Results ──</span></span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; Percentage-change approach with a 50% decrease in instrument scores indicating</span></span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; a clinical significant improvement.</span></span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; Category     |   n | Percent</span></span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt; ----------------------------</span></span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; Improved     | 155 |  27.93%</span></span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; Unchanged    | 366 |  65.95%</span></span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; Deteriorated |  34 |   6.13%</span></span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co"># Get a summary</span></span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="fu">summary</span>(pct_results)</span>
-<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; ── Clinical Significance Results ──</span></span>
-<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co">#&gt; Percentage-change analysis of clinical significance with a 50% decrease in</span></span>
-<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt; instrument scores indicating a clinical significant improvement.</span></span>
-<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a><span class="co">#&gt; There were 555 participants in the whole dataset of which 555 (100%) could be</span></span>
-<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a><span class="co">#&gt; included in the analysis.</span></span>
-<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a><span class="co">#&gt; ── Individual Level Results</span></span>
-<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a><span class="co">#&gt; Category     |   n | Percent</span></span>
-<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a><span class="co">#&gt; ----------------------------</span></span>
-<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a><span class="co">#&gt; Improved     | 155 |  27.93%</span></span>
-<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a><span class="co">#&gt; Unchanged    | 366 |  65.95%</span></span>
-<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a><span class="co">#&gt; Deteriorated |  34 |   6.13%</span></span></code></pre></div>
-</div>
-<div id="visualizing-the-results" class="section level2">
-<h2>Visualizing the Results</h2>
-<p>Visualizing the results can help you better understand the clinical
-significance of changes in patient outcomes.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Plot the results</span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">plot</span>(pct_results)</span></code></pre></div>
-<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a></span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co"># Show clinical significance categories</span></span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="fu">plot</span>(pct_results, <span class="at">show =</span> category)</span></code></pre></div>
-<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
-</div>
-<div id="data-with-more-than-two-measurements" class="section level2">
-<h2>Data with More Than Two Measurements</h2>
-<p>When working with data that has more than two measurements, you must
-explicitly define the pre and post measurement time points using the
-<code>pre</code> and <code>post</code> parameters.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Clinical significance distribution analysis with more than two measurements</span></span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>cs_results <span class="ot">&lt;-</span> claus_2020 <span class="sc">|&gt;</span></span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="fu">cs_percentage</span>(</span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>    id,</span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>    time,</span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>    bdi,</span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>    <span class="at">pre =</span> <span class="dv">1</span>,</span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>    <span class="at">post =</span> <span class="dv">4</span>,</span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>    <span class="at">pct_improvement =</span> <span class="fl">0.3</span></span>
-<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>  )</span>
-<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a></span>
-<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co"># Display the results</span></span>
-<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>cs_results</span>
-<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; ── Clinical Significance Results ──</span></span>
-<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt; Percentage-change approach with a 30% decrease in instrument scores indicating</span></span>
-<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt; a clinical significant improvement.</span></span>
-<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co">#&gt; Category     |  n | Percent</span></span>
-<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt; ---------------------------</span></span>
-<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt; Improved     | 19 |  47.50%</span></span>
-<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt; Unchanged    | 21 |  52.50%</span></span>
-<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt; Deteriorated |  0 |   0.00%</span></span>
-<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="fu">summary</span>(cs_results)</span>
-<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; ── Clinical Significance Results ──</span></span>
-<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt; Percentage-change analysis of clinical significance with a 30% decrease in</span></span>
-<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt; instrument scores indicating a clinical significant improvement.</span></span>
-<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt; There were 43 participants in the whole dataset of which 40 (93%) could be</span></span>
-<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="co">#&gt; included in the analysis.</span></span>
-<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="co">#&gt; ── Individual Level Results</span></span>
-<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt; Category     |  n | Percent</span></span>
-<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt; ---------------------------</span></span>
-<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt; Improved     | 19 |  47.50%</span></span>
-<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt; Unchanged    | 21 |  52.50%</span></span>
-<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt; Deteriorated |  0 |   0.00%</span></span>
-<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="fu">plot</span>(cs_results)</span></code></pre></div>
-<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
-</div>
-<div id="setting-different-thresholds" class="section level2">
-<h2>Setting Different Thresholds</h2>
-<p>You can set different thresholds for improvement and deterioration by
-adjusting the <code>pct_deterioration</code> argument Let’s see an
-example:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># Clinical significance analysis with different improvement and deterioration thresholds</span></span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>cs_results_2 <span class="ot">&lt;-</span> claus_2020 <span class="sc">|&gt;</span></span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="fu">cs_percentage</span>(</span>
-<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>    <span class="at">id =</span> id,</span>
-<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>    <span class="at">time =</span> time,</span>
-<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>    <span class="at">outcome =</span> hamd,</span>
-<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>    <span class="at">pre =</span> <span class="dv">1</span>,</span>
-<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>    <span class="at">post =</span> <span class="dv">4</span>,</span>
-<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>    <span class="at">pct_improvement =</span> <span class="fl">0.3</span>,</span>
-<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>    <span class="at">pct_deterioration =</span> <span class="fl">0.2</span></span>
-<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>  )</span>
-<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a></span>
-<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="co"># Display the results</span></span>
-<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>cs_results_2</span>
-<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="co">#&gt; ── Clinical Significance Results ──</span></span>
-<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="co">#&gt; Percentage-change approach with a 30% decrease in instrument scores indicating</span></span>
-<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="co">#&gt; a clinical significant improvement and a 20% increase in instrument scores</span></span>
-<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="co">#&gt; indicating a clinical significant deterioration.</span></span>
-<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="co">#&gt; Category     |  n | Percent</span></span>
-<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a><span class="co">#&gt; ---------------------------</span></span>
-<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="co">#&gt; Improved     | 25 |  62.50%</span></span>
-<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a><span class="co">#&gt; Unchanged    | 14 |  35.00%</span></span>
-<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a><span class="co">#&gt; Deteriorated |  1 |   2.50%</span></span>
-<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a></span>
-<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a><span class="co"># Visualize the results</span></span>
-<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a><span class="fu">plot</span>(cs_results_2)</span></code></pre></div>
-<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
 </div>
 <div id="grouped-analysis" class="section level2">
 <h2>Grouped Analysis</h2>
-<p>You can also perform a grouped analysis by providing a group column
-from the data. This is useful when comparing treatment groups or other
-categories.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>cs_results_grouped <span class="ot">&lt;-</span> claus_2020 <span class="sc">|&gt;</span></span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="fu">cs_percentage</span>(</span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>    <span class="at">id =</span> id,</span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>    <span class="at">time =</span> time,</span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>    <span class="at">outcome =</span> hamd,</span>
-<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>    <span class="at">pre =</span> <span class="dv">1</span>,</span>
-<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>    <span class="at">post =</span> <span class="dv">4</span>,</span>
-<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>    <span class="at">pct_improvement =</span> <span class="fl">0.3</span>,</span>
-<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>    <span class="at">group =</span> treatment</span>
-<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>  )</span>
-<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a></span>
-<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="co"># Display and visualize the results</span></span>
-<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>cs_results_grouped</span>
-<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a><span class="co">#&gt; ── Clinical Significance Results ──</span></span>
-<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a><span class="co">#&gt; Percentage-change approach with a 30% decrease in instrument scores indicating</span></span>
-<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a><span class="co">#&gt; a clinical significant improvement.</span></span>
-<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a><span class="co">#&gt; Group |     Category |  n | Percent</span></span>
-<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a><span class="co">#&gt; -----------------------------------</span></span>
-<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a><span class="co">#&gt; TAU   |     Improved |  6 |  15.00%</span></span>
-<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a><span class="co">#&gt; TAU   |    Unchanged | 13 |  32.50%</span></span>
-<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a><span class="co">#&gt; TAU   | Deteriorated |  0 |   0.00%</span></span>
-<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a><span class="co">#&gt; PA    |     Improved | 19 |  47.50%</span></span>
-<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a><span class="co">#&gt; PA    |    Unchanged |  2 |   5.00%</span></span>
-<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a><span class="co">#&gt; PA    | Deteriorated |  0 |   0.00%</span></span>
-<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a><span class="fu">plot</span>(cs_results_grouped)</span></code></pre></div>
-<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>We can also explore if the proportion of “responders” differs between
+the treatment groups (TAU vs. PA).</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Grouped analysis with a 50% improvement cutoff</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>pct_grouped <span class="ot">&lt;-</span> claus_2020 <span class="sc">|&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="fu">cs_percentage</span>(</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>    <span class="at">id =</span> id,</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>    <span class="at">time =</span> time,</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>    <span class="at">outcome =</span> bdi,</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>    <span class="at">pre =</span> <span class="dv">1</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>    <span class="at">post =</span> <span class="dv">4</span>,</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>    <span class="at">pct_improvement =</span> <span class="fl">0.5</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>    <span class="at">group =</span> treatment</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>  )</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="fu">summary</span>(pct_grouped)</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; ---- Clinical Significance Results ----</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; Approach:                 Percentage-based</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt; Percentage Improvement:   50.00%</span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co">#&gt; Percentage Deterioration: 50.00%</span></span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt; Better is:                Lower</span></span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a><span class="co">#&gt; N (original):             43</span></span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a><span class="co">#&gt; N (used):                 40</span></span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a><span class="co">#&gt; Percent used:             93.02%</span></span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a><span class="co">#&gt; Outcome:                  bdi</span></span>
+<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a><span class="co">#&gt; Group |     Category |  N | Percent | Percent by Group</span></span>
+<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a><span class="co">#&gt; ------------------------------------------------------</span></span>
+<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a><span class="co">#&gt; TAU   |     Improved |  2 |   5.00% |           10.53%</span></span>
+<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a><span class="co">#&gt; TAU   |    Unchanged | 17 |  42.50% |           89.47%</span></span>
+<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a><span class="co">#&gt; TAU   | Deteriorated |  0 |   0.00% |            0.00%</span></span>
+<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a><span class="co">#&gt; PA    |     Improved |  9 |  22.50% |           42.86%</span></span>
+<span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a><span class="co">#&gt; PA    |    Unchanged | 12 |  30.00% |           57.14%</span></span>
+<span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a><span class="co">#&gt; PA    | Deteriorated |  0 |   0.00% |            0.00%</span></span></code></pre></div>
+<p>The results suggest that a much higher proportion of patients in the
+Placebo Amplification (PA) group (42.9%) achieved a 50% symptom
+reduction compared to the Treatment as Usual (TAU) group (10.5%).</p>
+<p>The plot clearly visualizes this difference:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">plot</span>(pct_grouped)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
 </div>
-<div id="analyzing-positive-outcomes" class="section level2">
-<h2>Analyzing Positive Outcomes</h2>
-<p>In some cases, higher values of an outcome may be considered better.
-You can specify this using the <code>better_is</code> argument. Let’s
-see an example with the WHO-5 score where higher values are considered
-better.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># Clinical significance analysis for outcomes where higher values are better</span></span>
-<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>cs_results_who <span class="ot">&lt;-</span> claus_2020 <span class="sc">|&gt;</span></span>
-<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="fu">cs_percentage</span>(</span>
-<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>    <span class="at">id =</span> id,</span>
-<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>    <span class="at">time =</span> time,</span>
-<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>    <span class="at">outcome =</span> who,</span>
-<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>    <span class="at">pre =</span> <span class="dv">1</span>,</span>
-<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>    <span class="at">post =</span> <span class="dv">4</span>,</span>
-<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>    <span class="at">pct_improvement =</span> <span class="fl">0.3</span>,</span>
-<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>    <span class="at">better_is =</span> <span class="st">&quot;higher&quot;</span></span>
-<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>  )</span>
-<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a></span>
-<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a><span class="co"># Display the results</span></span>
-<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>cs_results_who</span>
-<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a><span class="co">#&gt; ── Clinical Significance Results ──</span></span>
-<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a><span class="co">#&gt; Percentage-change approach with a 30% increase in instrument scores indicating</span></span>
-<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a><span class="co">#&gt; a clinical significant improvement.</span></span>
-<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a><span class="co">#&gt; Category     |  n | Percent</span></span>
-<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a><span class="co">#&gt; ---------------------------</span></span>
-<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a><span class="co">#&gt; Improved     | 28 |  70.00%</span></span>
-<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a><span class="co">#&gt; Unchanged    |  9 |  22.50%</span></span>
-<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a><span class="co">#&gt; Deteriorated |  3 |   7.50%</span></span></code></pre></div>
-</div>
-</div>
-<div id="conclusion" class="section level1">
-<h1>Conclusion</h1>
-<p>In this tutorial, you’ve learned how to perform clinical significance
-analysis using the <code>cs_percentage()</code> function in R. This
-analysis may be crucial for determining the practical importance of
-changes in patient outcomes. By adjusting thresholds and considering
-grouped analyses, you can gain valuable insights for healthcare and
-clinical research applications.</p>
+<div id="using-different-cutoffs-for-improvement-and-deterioration" class="section level2">
+<h2>Using Different Cutoffs for Improvement and Deterioration</h2>
+<p>A useful feature of <code>cs_percentage()</code> is the ability to
+set different cutoffs for improvement and deterioration via the
+<code>pct_deterioration</code> argument. For instance, in some contexts,
+a small worsening of symptoms (e.g., 20%) might already be considered a
+significant deterioration, while a larger change (e.g., 50%) is required
+for improvement.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>pct_asymmetric <span class="ot">&lt;-</span> claus_2020 <span class="sc">|&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="fu">cs_percentage</span>(</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>    <span class="at">id =</span> id,</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>    <span class="at">time =</span> time,</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>    <span class="at">outcome =</span> bdi,</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>    <span class="at">pre =</span> <span class="dv">1</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>    <span class="at">post =</span> <span class="dv">4</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>    <span class="at">pct_improvement =</span> <span class="fl">0.5</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>    <span class="at">pct_deterioration =</span> <span class="fl">0.2</span> <span class="co"># A smaller threshold for worsening</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>  )</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="fu">summary</span>(pct_asymmetric)</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt; ---- Clinical Significance Results ----</span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co">#&gt; Approach:                 Percentage-based</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="co">#&gt; Percentage Improvement:   50.00%</span></span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt; Percentage Deterioration: 20.00%</span></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co">#&gt; Better is:                Lower</span></span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt; N (original):             43</span></span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt; N (used):                 40</span></span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt; Percent used:             93.02%</span></span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="co">#&gt; Outcome:                  bdi</span></span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a><span class="co">#&gt; Category     |  N | Percent</span></span>
+<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a><span class="co">#&gt; ---------------------------</span></span>
+<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a><span class="co">#&gt; Improved     | 11 |  27.50%</span></span>
+<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a><span class="co">#&gt; Unchanged    | 26 |  65.00%</span></span>
+<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a><span class="co">#&gt; Deteriorated |  3 |   7.50%</span></span></code></pre></div>
 </div>
 
 

@@ -1,114 +1,61 @@
 ## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5,
+  fig.align = "center"
 )
 
-## -----------------------------------------------------------------------------
+## ----setup--------------------------------------------------------------------
 library(clinicalsignificance)
 
-antidepressants
-claus_2020
-
-## -----------------------------------------------------------------------------
-pct_results <- antidepressants |> 
+## ----pct-basic----------------------------------------------------------------
+# Analyze change using a 50% improvement cutoff
+pct_results <- claus_2020 |>
   cs_percentage(
-    id = patient,
-    time = measurement,
-    outcome = mom_di,
-    pct_improvement = 0.3
-  )
-
-## -----------------------------------------------------------------------------
-# Turning off the warning by specifying pre-measurement time
-pct_results <- antidepressants |>
-  cs_percentage(
-    id = patient,
-    time = measurement,
-    outcome = mom_di,
-    pre = "Before",
+    id = id,
+    time = time,
+    outcome = bdi,
+    pre = 1,
+    post = 4,
     pct_improvement = 0.5
   )
 
-## -----------------------------------------------------------------------------
-# Print the results
-pct_results
-
-# Get a summary
 summary(pct_results)
 
-## -----------------------------------------------------------------------------
-# Plot the results
+## ----pct-basic-plot-----------------------------------------------------------
 plot(pct_results)
 
-# Show clinical significance categories
-plot(pct_results, show = category)
-
-## -----------------------------------------------------------------------------
-# Clinical significance distribution analysis with more than two measurements
-cs_results <- claus_2020 |>
-  cs_percentage(
-    id,
-    time,
-    bdi,
-    pre = 1,
-    post = 4,
-    pct_improvement = 0.3
-  )
-
-# Display the results
-cs_results
-summary(cs_results)
-plot(cs_results)
-
-## -----------------------------------------------------------------------------
-# Clinical significance analysis with different improvement and deterioration thresholds
-cs_results_2 <- claus_2020 |>
+## ----pct-grouped--------------------------------------------------------------
+# Grouped analysis with a 50% improvement cutoff
+pct_grouped <- claus_2020 |>
   cs_percentage(
     id = id,
     time = time,
-    outcome = hamd,
+    outcome = bdi,
     pre = 1,
     post = 4,
-    pct_improvement = 0.3,
-    pct_deterioration = 0.2
-  )
-
-# Display the results
-cs_results_2
-
-# Visualize the results
-plot(cs_results_2)
-
-## -----------------------------------------------------------------------------
-cs_results_grouped <- claus_2020 |>
-  cs_percentage(
-    id = id,
-    time = time,
-    outcome = hamd,
-    pre = 1,
-    post = 4,
-    pct_improvement = 0.3,
+    pct_improvement = 0.5,
     group = treatment
   )
 
-# Display and visualize the results
-cs_results_grouped
-plot(cs_results_grouped)
+summary(pct_grouped)
 
-## -----------------------------------------------------------------------------
-# Clinical significance analysis for outcomes where higher values are better
-cs_results_who <- claus_2020 |>
+## ----pct-grouped-plot---------------------------------------------------------
+plot(pct_grouped)
+
+## ----pct-different-cutoffs----------------------------------------------------
+pct_asymmetric <- claus_2020 |>
   cs_percentage(
     id = id,
     time = time,
-    outcome = who,
+    outcome = bdi,
     pre = 1,
     post = 4,
-    pct_improvement = 0.3,
-    better_is = "higher"
+    pct_improvement = 0.5,
+    pct_deterioration = 0.2 # A smaller threshold for worsening
   )
 
-# Display the results
-cs_results_who
+summary(pct_asymmetric)
 

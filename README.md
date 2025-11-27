@@ -1,193 +1,187 @@
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
-
 # clinicalsignificance <img src="man/figures/logo.png" align="right" height="139" alt="" />
 
-<!-- badges: start -->
+[![CRAN
+status](https://img.shields.io/cran/v/clinicalsignificance.svg)](https://CRAN.R-project.org/package=clinicalsignificance)
+[![CRAN
+downloads](https://cranlogs.r-pkg.org/badges/grand-total/clinicalsignificance)](https://cran.r-project.org/package=clinicalsignificance)
+[![R-CMD-check](https://github.com/benediktclaus/clinicalsignificance/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/benediktclaus/clinicalsignificance/actions/workflows/R-CMD-check.yaml)
+The **clinicalsignificance** R package provides a comprehensive toolkit
+for analyzing **clinical significance** in intervention studies.
 
-[![](https://www.r-pkg.org/badges/version/clinicalsignificance)](https://cran.r-project.org/package=clinicalsignificance)
-[![](http://cranlogs.r-pkg.org/badges/grand-total/clinicalsignificance)](https://cran.r-project.org/package=clinicalsignificance)
+> **Why this package?** While *statistical* significance asks: *“Is this
+> effect unlikely due to chance?”* Clinical significance asks: **“Does
+> this intervention make a meaningful difference for the patient?”**
 
-[![R-CMD-check](https://github.com/pedscience/clinicalsignificance/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/pedscience/clinicalsignificance/actions/workflows/R-CMD-check.yaml)
-<!-- badges: end -->
+This package empowers researchers and practitioners to move beyond
+p-values and assess the practical relevance of treatment outcomes.
 
-The goal of this powerful package is to provide all necessary tools for
-analyses of clinical significance in clinical intervention studies. In
-contrast to *statistical* significance, which assesses if it is probable
-that there is a treatment effect, *clinical* significance can be used to
-determine if a treatment effect is of practical use or meaningful for
-patients. This package is designed to help researchers and healthcare
-professionals determine the clinical relevance of their findings. It
-provides various functions and tools for quantifying and visualizing
-clinical significance, making it easier to make informed decisions in
-the medical field.
+## 🛠 Core Functions
 
-## Installation
+The package implements the most widely used methods for clinical
+significance analysis. Each approach answers a specific question:
 
-You can install the clinicalsignificance package from CRAN using the
-following command:
+- **`cs_anchor()`**: *Did the patient improve by a minimal amount?*
+  Evaluates change based on a predefined **Minimal Important Difference
+  (MID)**.
+- **`cs_percentage()`**: *Did the patient improve by a certain
+  percentage?* Assesses change relative to the baseline score.
+- **`cs_distribution()`**: *Is the change reliable (beyond measurement
+  error)?* Uses statistical distribution metrics like the **Reliable
+  Change Index (RCI)**.
+- **`cs_statistical()`**: *Did the patient return to a functional
+  range?* Determines if a patient moved from a clinical to a
+  **functional population**.
+- **`cs_combined()`**: *The “Gold Standard” (e.g., Jacobson & Truax).*
+  Combines reliability and cutoff criteria for a robust assessment.
+
+## 📦 Installation
+
+Install the stable version from CRAN:
 
 ``` r
 install.packages("clinicalsignificance")
 ```
 
-Alternatively, you can install the development version from GitHub:
+Or the development version from GitHub:
 
 ``` r
-devtools::install_github("pedscience/clinicalsignificance")
+# install.packages("pak")
+pak::pak("benediktclaus/clinicalsignificance")
 ```
 
-## Main Functions
+## 🚀 Example: The Combined Approach
 
-The main functions of the package are based on the main approaches for
-clinical significance analyses, i.e., the anchor-based approach, the
-percentage-change approach, the distribution-based approach, the
-statistical, and combined approaches. Hence, the main functions are
-
-- `cs_anchor()`
-- `cs_percentage()`
-- `cs_distribution()`
-- `cs_statistical()`
-- `cs_combined()`
-
-See the package vignettes for additional details on the various clinical
-significance approaches.
-
-## Example
-
-Claus et al. (2020) implemented a novel intervention to enhance the
-effectiveness of antidepressants by boosting the inherent placebo effect
-of that medication. The randomized patients to treatment as usual (TAU)
-and a placebo amplification (PA) group and measured the severity of
-depressive symptoms over time.
-
-In the anchor-based approach, a clinical significant change is believed
-to have occured if a given change is greater or equal to the minimally
-important difference of the used instrument. Given a tidy dataset of the
-study and a minimally important difference for the Beck Depression
-Inventory (second edition, BDI-II) of 7 points, the study data by Claus
-et al. (2020) may be analyzed as follows:
+Let’s look at the **combined approach** (Jacobson & Truax, 1991). We
+want to know if patients in the `claus_2020` dataset (included in the
+package) showed a **reliable change** AND moved into a **functional
+population** range.
 
 ``` r
 library(clinicalsignificance)
+library(ggplot2)
 
-cs_results <- claus_2020 |>
-  cs_anchor(
+# 1. Perform the analysis
+results_combined <- claus_2020 |>
+  cs_combined(
     id = id,
     time = time,
     outcome = bdi,
     pre = 1,
     post = 4,
-    mid_improvement = 7
+    reliability = 0.801,
+    m_functional = 7.69,
+    sd_functional = 7.52,
+    cutoff_type = "c"
   )
 
-cs_results
+# 2. Visualize the results
+plot(results_combined, show_group = "category")
+#> Ignoring unknown labels:
+#> • colour : "Group"
+```
+
+<img src="man/figures/README-example-1.png" width="100%" style="display: block; margin: auto;" />
+
+**Interpreting the Plot:** \* **Recovered (Green):** Reliable
+improvement + moved to functional range. \* **Improved (Blue):**
+Reliable improvement, but still in clinical range. \* **Unchanged
+(Grey):** No reliable change. \* **Deteriorated (Red):** Reliable
+worsening.
+
+``` r
+# 3. Get a summary table
+summary(results_combined)
 #> 
-#> ── Clinical Significance Results ──
+#> ---- Clinical Significance Results ----
 #> 
-#> Individual anchor-based approach with a 7 point decrease in instrument scores
-#> indicating a clinical significant improvement.
-#> Category     |  n | Percent
+#> Approach:     Distribution-based
+#> RCI Method:   JT
+#> N (original): 43
+#> N (used):     40
+#> Percent used: 93.02%
+#> Outcome:      bdi
+#> Cutoff Type:  c
+#> Cutoff:       21.02
+#> Outcome:      bdi
+#> Reliability:  0.801
+#> 
+#> -- Cutoff Descriptives
+#> 
+#> M Clinical | SD Clinical | M Functional | SD Functional
+#> -------------------------------------------------------
+#> 35.48      |        8.16 |         7.69 |          7.52
+#> 
+#> 
+#> -- Results
+#> 
+#> Category     |  N | Percent
 #> ---------------------------
-#> Improved     | 25 |  62.50%
-#> Unchanged    | 11 |  27.50%
-#> Deteriorated |  4 |  10.00%
+#> Recovered    | 10 |  25.00%
+#> Improved     |  8 |  20.00%
+#> Unchanged    | 22 |  55.00%
+#> Deteriorated |  0 |   0.00%
+#> Harmed       |  0 |   0.00%
 ```
 
-You can receive a detailed summary of the analysis by
+## 📚 Learn More
 
-``` r
-summary(cs_results)
-#> 
-#> ── Clinical Significance Results ──
-#> 
-#> Individual anchor-based analysis of clinical significance with a 7 point
-#> decrease in instrument scores (bdi) indicating a clinical significant
-#> improvement.
-#> There were 43 participants in the whole dataset of which 40 (93%) could be
-#> included in the analysis.
-#> 
-#> ── Individual Level Results
-#> Category     |  n | Percent
-#> ---------------------------
-#> Improved     | 25 |  62.50%
-#> Unchanged    | 11 |  27.50%
-#> Deteriorated |  4 |  10.00%
+- **Vignettes**: Detailed tutorials on all methods are available on the
+  [**package
+  website**](https://benediktclaus.github.io/clinicalsignificance/articles/).
+- **Publication**: For the theoretical background, check out our paper
+  in the [**Journal of Statistical
+  Software**](https://doi.org/10.18637/jss.v111.i01).
+
+## 📄 Citation
+
+Please cite both the package and the JSS paper if you use
+`clinicalsignificance` in your research.
+
+> Claus, B. B., Wager, J., & Bonnet, U. (2024). clinicalsignificance:
+> Clinical Significance Analyses of Intervention Studies in R. *Journal
+> of Statistical Software*, *111*(1), 1–39.
+> <https://doi.org/10.18637/jss.v111.i01>
+
+<details>
+
+<summary>
+
+<strong>Click to show BibTeX</strong>
+</summary>
+
+``` bibtex
+@article{JSS:v111:i01,
+  author = {Benedikt B. Claus and Julia Wager and Udo Bonnet},
+  title = {{clinicalsignificance}: Clinical Significance Analyses of Intervention Studies in {R}},
+  journal = {Journal of Statistical Software},
+  year = {2024},
+  volume = {111},
+  number = {1},
+  pages = {1--39},
+  doi = {10.18637/jss.v111.i01},
+}
+
+@manual{R-clinicalsignificance,
+  title = {clinicalsignificance: A Toolbox for Clinical Significance Analyses in Intervention Studies},
+  author = {Benedikt B. Claus},
+  year = {2024},
+  note = {R package version 2.1.0},
+  doi = {10.32614/CRAN.package.clinicalsignificance},
+  url = {[https://github.com/benediktclaus/clinicalsignificance/](https://github.com/benediktclaus/clinicalsignificance/)},
+}
 ```
 
-or plot the cs_results with
+</details>
 
-``` r
-plot(cs_results)
-```
+## 🤝 Contributing
 
-<img src="man/figures/README-unnamed-chunk-7-1.png" width="80%" style="display: block; margin: auto;" />
-
-### Including Groups
-
-Group-wise results may be obtained by setting the `group` argument
-
-``` r
-cs_results_grouped <- claus_2020 |>
-  cs_anchor(
-    id = id,
-    time = time,
-    outcome = bdi,
-    pre = 1,
-    post = 4,
-    mid_improvement = 7,
-    group = treatment
-  )
-
-summary(cs_results_grouped)
-#> 
-#> ── Clinical Significance Results ──
-#> 
-#> Individual anchor-based analysis of clinical significance with a 7 point
-#> decrease in instrument scores (bdi) indicating a clinical significant
-#> improvement.
-#> There were 43 participants in the whole dataset of which 40 (93%) could be
-#> included in the analysis.
-#> 
-#> ── Individual Level Results
-#> Group |     Category |  n | Percent
-#> -----------------------------------
-#> TAU   |     Improved |  8 |  20.00%
-#> TAU   |    Unchanged |  7 |  17.50%
-#> TAU   | Deteriorated |  4 |  10.00%
-#> PA    |     Improved | 17 |  42.50%
-#> PA    |    Unchanged |  4 |  10.00%
-#> PA    | Deteriorated |  0 |   0.00%
-plot(cs_results_grouped)
-```
-
-<img src="man/figures/README-unnamed-chunk-8-1.png" width="80%" style="display: block; margin: auto;" />
-
-### Clinical Significance Categories
-
-The individual categories may be visualized by adjusting the argument
-`show` in the `plot()` function call.
-
-``` r
-plot(cs_results, show = category)
-```
-
-<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" style="display: block; margin: auto;" />
-
-## Contributing
-
-We welcome contributions from the R community to enhance the package. If
-you find any bugs, have feature requests, or would like to contribute
-improvements, please open an issue or submit a pull request on GitHub.
-
-## License
-
-This package is released under the GNU General Public License. You are
-free to use and distribute it according to the terms of the license.
+Contributions are welcome! If you encounter bugs or have feature
+requests: 1. Check the [Issue
+Tracker](https://github.com/benediktclaus/clinicalsignificance/issues).
+2. Submit a Pull Request.
 
 ------------------------------------------------------------------------
 
-Thank you for using the clinicalsignificance R package! We hope it
-proves to be a valuable tool for assessing clinical significance in your
-medical and healthcare research. If you find it helpful, consider giving
-us a star on GitHub and spreading the word.
+**License:** GNU General Public License v3.0  
+Built with ❤️ for better clinical research.

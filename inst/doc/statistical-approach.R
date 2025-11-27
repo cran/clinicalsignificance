@@ -1,105 +1,51 @@
 ## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5,
+  fig.align = "center"
 )
 
-## -----------------------------------------------------------------------------
+## ----setup--------------------------------------------------------------------
 library(clinicalsignificance)
 
-antidepressants
-claus_2020
-
-## -----------------------------------------------------------------------------
-stat_results <- antidepressants |> 
+## ----stat-basic---------------------------------------------------------------
+# Perform the statistical analysis
+stat_results <- claus_2020 |>
   cs_statistical(
-    id = patient,
-    time = measurement,
-    outcome = mom_di,
-    m_functional = 7,
-    sd_functional = 7,
+    id = id,
+    time = time,
+    outcome = bdi,
+    pre = 1,
+    post = 4,
+    m_functional = 7.69,
+    sd_functional = 7.52,
     cutoff_type = "c"
   )
 
-## -----------------------------------------------------------------------------
-# Turning off the warning by specifying pre-measurement time
-stat_results <- antidepressants |>
-  cs_statistical(
-    id = patient,
-    time = measurement,
-    outcome = mom_di,
-    pre = "Before",
-    m_functional = 7,
-    sd_functional = 7,
-    cutoff_type = "c"
-  )
-
-## -----------------------------------------------------------------------------
-# Print the results
-stat_results
-
-# Get a summary
 summary(stat_results)
 
-## -----------------------------------------------------------------------------
-# Plot the results
+## ----stat-basic-plot----------------------------------------------------------
 plot(stat_results)
 
-# Show clinical significance categories
-plot(stat_results, show = category)
-
-## -----------------------------------------------------------------------------
-# Clinical significance distribution analysis with more than two measurements
-cs_results <- claus_2020 |>
+## ----stat-grouped-------------------------------------------------------------
+# Grouped statistical analysis
+stat_grouped <- claus_2020 |>
   cs_statistical(
     id = id,
     time = time,
     outcome = bdi,
     pre = 1,
     post = 4,
-    m_functional = 7,
-    sd_functional = 7,
-    cutoff_type = "c"
-  )
-
-# Display the results
-cs_results
-summary(cs_results)
-plot(cs_results)
-
-## -----------------------------------------------------------------------------
-cs_results_grouped <- claus_2020 |>
-  cs_statistical(
-    id = id,
-    time = time,
-    outcome = bdi,
-    pre = 1,
-    post = 4,
-    m_functional = 7,
-    sd_functional = 7,
+    m_functional = 7.69,
+    sd_functional = 7.52,
     cutoff_type = "c",
     group = treatment
   )
 
-# Display and visualize the results
-cs_results_grouped
-plot(cs_results_grouped)
+summary(stat_grouped)
 
-## -----------------------------------------------------------------------------
-# Clinical significance analysis for outcomes where higher values are better
-cs_results_who <- claus_2020 |>
-  cs_statistical(
-    id,
-    time,
-    who,
-    pre = 1,
-    post = 4,
-    m_functional = 7,
-    sd_functional = 7,
-    cutoff_type = "c",
-    better_is = "higher"
-  )
-
-# Display the results
-cs_results_who
+## ----stat-grouped-plot--------------------------------------------------------
+plot(stat_grouped)
 

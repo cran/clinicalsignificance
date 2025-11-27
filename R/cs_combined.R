@@ -90,38 +90,74 @@
 #' cs_results_grouped
 #' summary(cs_results_grouped)
 #' plot(cs_results_grouped)
-cs_combined <- function(data,
-                        id,
-                        time,
-                        outcome,
-                        group = NULL,
-                        pre = NULL,
-                        post = NULL,
-                        mid_improvement = NULL,
-                        mid_deterioration = NULL,
-                        reliability = NULL,
-                        reliability_post = NULL,
-                        m_functional = NULL,
-                        sd_functional = NULL,
-                        better_is = c("lower", "higher"),
-                        rci_method = c("JT", "GLN", "HLL", "EN", "NK", "HA", "HLM"),
-                        cutoff_type = c("a", "b", "c"),
-                        significance_level = 0.05) {
+cs_combined <- function(
+  data,
+  id,
+  time,
+  outcome,
+  group = NULL,
+  pre = NULL,
+  post = NULL,
+  mid_improvement = NULL,
+  mid_deterioration = NULL,
+  reliability = NULL,
+  reliability_post = NULL,
+  m_functional = NULL,
+  sd_functional = NULL,
+  better_is = c("lower", "higher"),
+  rci_method = c("JT", "GLN", "HLL", "EN", "NK", "HA", "HLM"),
+  cutoff_type = c("a", "b", "c"),
+  significance_level = 0.05
+) {
   # Argument checks
   cs_method <- rlang::arg_match(rci_method)
   cut_type <- rlang::arg_match(cutoff_type)
-  if (missing(id)) cli::cli_abort("Argument {.code id} is missing with no default. A column containing patient-specific IDs must be supplied.")
-  if (missing(time)) cli::cli_abort("Argument {.code time} is missing with no default. A column identifying the individual measurements must be supplied.")
-  if (missing(outcome)) cli::cli_abort("Argument {.code outcome} is missing with no default. A column containing the outcome must be supplied.")
+  if (missing(id)) {
+    cli::cli_abort(
+      "Argument {.code id} is missing with no default. A column containing patient-specific IDs must be supplied."
+    )
+  }
+  if (missing(time)) {
+    cli::cli_abort(
+      "Argument {.code time} is missing with no default. A column identifying the individual measurements must be supplied."
+    )
+  }
+  if (missing(outcome)) {
+    cli::cli_abort(
+      "Argument {.code outcome} is missing with no default. A column containing the outcome must be supplied."
+    )
+  }
   if (is.null(mid_improvement) & cs_method != "HLM") {
-    if (is.null(reliability)) cli::cli_abort("Argument {.code reliability} is missing with no default. An instrument reliability must be supplied.")
-    if (!is.null(reliability) & !is.numeric(reliability)) cli::cli_abort("{.code reliability} must be numeric but a {.code {typeof(reliability)}} was supplied.")
-    if (!is.null(reliability) & !dplyr::between(reliability, 0, 1)) cli::cli_abort("{.code reliability} must be between 0 and 1 but {reliability} was supplied.")
-
+    if (is.null(reliability)) {
+      cli::cli_abort(
+        "Argument {.code reliability} is missing with no default. An instrument reliability must be supplied."
+      )
+    }
+    if (!is.null(reliability) & !is.numeric(reliability)) {
+      cli::cli_abort(
+        "{.code reliability} must be numeric but a {.code {typeof(reliability)}} was supplied."
+      )
+    }
+    if (!is.null(reliability) & !dplyr::between(reliability, 0, 1)) {
+      cli::cli_abort(
+        "{.code reliability} must be between 0 and 1 but {reliability} was supplied."
+      )
+    }
   }
   if (cut_type %in% c("b", "c")) {
-    if (is.null(m_functional) | is.null(sd_functional)) cli::cli_abort("For cutoffs {.code b} and {.code c}, mean and standard deviation for a functional population must be provided via {.code m_functional} and {.code sd_functional}")
-    if ((!is.null(m_functional) & !is.numeric(m_functional)) | (!is.null(sd_functional) & !is.numeric(sd_functional))) cli::cli_abort("The mean and standard deviation supplied with {.code m_functional} and {.code sd_functional} must be numeric.")
+    if (is.null(m_functional) | is.null(sd_functional)) {
+      cli::cli_abort(
+        "For cutoffs {.code b} and {.code c}, mean and standard deviation for a functional population must be provided via {.code m_functional} and {.code sd_functional}"
+      )
+    }
+    if (
+      (!is.null(m_functional) & !is.numeric(m_functional)) |
+        (!is.null(sd_functional) & !is.numeric(sd_functional))
+    ) {
+      cli::cli_abort(
+        "The mean and standard deviation supplied with {.code m_functional} and {.code sd_functional} must be numeric."
+      )
+    }
   }
 
   # Prepare the data
@@ -136,18 +172,21 @@ cs_combined <- function(data,
     method = cs_method
   )
 
-
   # Prepend a class to enable method dispatch for RCI calculation
-  if (!is.null(mid_improvement)) class(datasets) <- c("cs_anchor_individual_within", class(datasets)) else class(datasets) <- c(paste0("cs_", tolower(cs_method)), class(datasets))
-  if (!is.null(mid_improvement)) cs_method <- "anchor-based"
-
+  if (!is.null(mid_improvement)) {
+    class(datasets) <- c("cs_anchor_individual_within", class(datasets))
+  } else {
+    class(datasets) <- c(paste0("cs_", tolower(cs_method)), class(datasets))
+  }
+  if (!is.null(mid_improvement)) {
+    cs_method <- "CWB"
+  }
 
   # Count participants
   n_obs <- list(
     n_original = nrow(datasets[["wide"]]),
     n_used = nrow(datasets[["data"]])
   )
-
 
   # Calculate relevant summary statistics for the chosen RCI method
   m_pre <- mean(datasets[["data"]][["pre"]])
@@ -157,14 +196,19 @@ cs_combined <- function(data,
     sd_post <- stats::sd(datasets[["data"]][["post"]])
   }
 
-
   # Get the direction of a beneficial intervention effect
-  if (rlang::arg_match(better_is) == "lower") direction <- -1 else direction <- 1
-
+  if (rlang::arg_match(better_is) == "lower") {
+    direction <- -1
+  } else {
+    direction <- 1
+  }
 
   # Determine critical RCI value based on significance level
-  if (cs_method != "HA") critical_value <- stats::qnorm(1 - significance_level/2) else critical_value <- stats::qnorm(1 - significance_level)
-
+  if (cs_method != "HA") {
+    critical_value <- stats::qnorm(1 - significance_level / 2)
+  } else {
+    critical_value <- stats::qnorm(1 - significance_level)
+  }
 
   if (is.null(mid_improvement)) {
     # Determine RCI and check each participant's change relative to it
@@ -181,7 +225,9 @@ cs_combined <- function(data,
     )
   } else {
     # Check each participant's or group change relative to MID
-    if (is.null(mid_deterioration)) mid_deterioration <- mid_improvement
+    if (is.null(mid_deterioration)) {
+      mid_deterioration <- mid_improvement
+    }
 
     rci_results <- calc_anchor(
       data = datasets,
@@ -190,7 +236,6 @@ cs_combined <- function(data,
       direction = direction
     )
   }
-
 
   # Calculate the cutoff value and check each patient's change relative to it
   cutoff_results <- calc_cutoff_from_data(
@@ -209,8 +254,6 @@ cs_combined <- function(data,
 
   class(rci_results) <- c("cs_combined", "list")
 
-
-
   # Create the summary table for printing and exporting
   summary_table <- create_summary_table(
     x = rci_results,
@@ -224,10 +267,11 @@ cs_combined <- function(data,
     direction = direction
   )
 
-
   class(rci_results) <- "list"
   class(cutoff_results) <- "list"
-
+  if (!is.null(mid_improvement)) {
+    cs_method <- "CWB"
+  }
 
   # Put everything into a list
   output <- list(
@@ -245,13 +289,15 @@ cs_combined <- function(data,
     summary_table = summary_table
   )
 
-
   # Return output
-  class(output) <- c("cs_analysis", "cs_combined", class(datasets), class(output))
+  class(output) <- c(
+    "cs_analysis",
+    "cs_combined",
+    class(datasets),
+    class(output)
+  )
   output
 }
-
-
 
 
 #' Print Method for the Combined Approach
@@ -268,38 +314,45 @@ cs_combined <- function(data,
 #'
 #' cs_results
 print.cs_combined <- function(x, ...) {
-  individual_summary_table <- x[["summary_table"]][["individual_level_summary"]]
-  group_summary_table <- x[["summary_table"]][["group_level_summary"]]
+  individual_summary_table <- .format_summary_table(x[["summary_table"]][[
+    "individual_level_summary"
+  ]])
+
   cs_method <- x[["method"]]
 
-  individual_summary_table_formatted <- individual_summary_table |>
-    dplyr::rename_with(tools::toTitleCase)
-
   if (cs_method == "HA") {
-    group_summary_table_formatted <- group_summary_table |>
-      dplyr::rename_with(tools::toTitleCase)
+    group_summary_table <- x[["summary_table"]][["group_level_summary"]] |>
+      .format_summary_table(table_title = "Group Level Summary")
   }
 
+  if (x[["direction"]] == -1) {
+    direction <- "Lower"
+  } else {
+    direction <- "Higher"
+  }
+
+  model_info <- .format_model_info_string(
+    list(
+      Approach = "Combined",
+      "Method" = cs_method,
+      "Better is" = direction
+    )
+  )
 
   # Print output
-  output_fun <- function() {
-    cli::cli_h2("Clinical Significance Results")
-    cli::cli_text("Combined approach using the {.strong {cs_method}} and {.strong statistical} approach.")
-    cli::cat_line()
-    if (cs_method != "HA") {
-      cli::cli_verbatim(insight::export_table(individual_summary_table_formatted))
-    } else {
-      cli::cli_text("Individual Level Summary")
-      cli::cli_verbatim(insight::export_table(individual_summary_table_formatted))
-      cli::cat_line()
-      cli::cli_text("Groupcs Level Summary")
-      cli::cli_verbatim(insight::export_table(group_summary_table_formatted))
-    }
+  if (cs_method != "HA") {
+    .print_strings(
+      model_info,
+      individual_summary_table
+    )
+  } else {
+    .print_strings(
+      model_info,
+      individual_summary_table,
+      group_summary_table
+    )
   }
-  output_fun()
 }
-
-
 
 
 #' Summary Method for the Combined Approach
@@ -318,63 +371,80 @@ print.cs_combined <- function(x, ...) {
 summary.cs_combined <- function(object, ...) {
   # browser()
   # Get necessary information from object
-  summary_table_formatted <- object[["summary_table"]][["individual_level_summary"]] |>
-    dplyr::rename_with(tools::toTitleCase) |>
-    insight::export_table()
+  summary_table <- .format_summary_table(
+    object[["summary_table"]][[
+      "individual_level_summary"
+    ]],
+    table_title = "-- Results"
+  )
 
-  cs_method <- object[["method"]]
+  rci_method <- object[["method"]]
   n_original <- cs_get_n(object, "original")[[1]]
   n_used <- cs_get_n(object, "used")[[1]]
-  pct <- round(n_used / n_original, digits = 3) * 100
   cutoff_info <- cs_get_cutoff(object, with_descriptives = TRUE)
   cutoff_type <- cutoff_info[["type"]]
   cutoff_value <- round(cutoff_info[["value"]], 2)
   cutoff_descriptives <- cutoff_info[, 1:4] |>
-    dplyr::rename("M Clinical" = "m_clinical", "SD Clinical" = "sd_clinical", "M Functional" = "m_functional", "SD Functional" = "sd_functional") |>
-    insight::export_table(missing = "---", )
-  mid <- object[["mid_improvement"]]
+    dplyr::rename(
+      "M Clinical" = "m_clinical",
+      "SD Clinical" = "sd_clinical",
+      "M Functional" = "m_functional",
+      "SD Functional" = "sd_functional"
+    ) |>
+    insight::export_table(missing = "---", title = "-- Cutoff Descriptives")
+  mid_improvement <- object[["mid_improvement"]]
+  mid_deterioration <- object[["mid_deterioration"]]
 
-  if (cs_method == "HA") {
-    group_summary_table <- object[["summary_table"]][["group_level_summary"]] |>
-      dplyr::rename_with(tools::toTitleCase) |>
-      insight::export_table()
+  if (rci_method == "HA") {
+    group_summary_table <- .format_summary_table(
+      object[["summary_table"]][["group_level_summary"]],
+      table_title = "Group Level Results"
+    )
   }
 
   outcome <- object[["outcome"]]
-  if (cs_method == "anchor-based") {
-    reliability_summary <- "The outcome was {.strong {outcome}} and the MID was set to {.strong {mid}}."
-  } else if (cs_method != "NK") {
-    reliability <- cs_get_reliability(object)[[1]]
-    reliability_summary <- "The outcome was {.strong {outcome}} and the reliability was set to {.strong {reliability}}."
+
+  model_info <- list(
+    Approach = "Distribution-based",
+    "RCI Method" = rci_method,
+    "N (original)" = n_original,
+    "N (used)" = n_used,
+    "Percent used" = insight::format_percent(
+      n_used / n_original
+    ),
+    Outcome = object[["outcome"]],
+    "Cutoff Type" = cutoff_type,
+    Cutoff = cutoff_value,
+    Outcome = outcome
+  )
+
+  if (rci_method == "HLM") {
+    additional_info <- list(
+      Reliability = "----"
+    )
+  } else if (rci_method == "NK") {
+    additional_info <- list(
+      "Realiability Pre" = cs_get_reliability(object)[[1]],
+      "Reliability Post" = cs_get_reliability(object)[[2]]
+    )
+  }
+  if (rci_method == "CWB") {
+    additional_info <- list(
+      "MID (Improvement)" = mid_improvement,
+      "MID (Deterioration)" = mid_deterioration
+    )
   } else {
-    reliability_pre <- cs_get_reliability(object)[[1]]
-    reliability_post <- cs_get_reliability(object)[[2]]
-    reliability_summary <- "The outcome was {.strong {outcome}} and the reliability was set to {.strong {reliability_pre}} (pre intervention) and {.strong {reliability_post}} (post intervention)."
+    additional_info <- list(
+      Reliability = cs_get_reliability(object)[[1]]
+    )
   }
 
+  model_info <- .format_model_info_string(c(model_info, additional_info))
 
   # Print output
-  output_fun <- function() {
-    cli::cli_h2("Clinical Significance Results")
-    cli::cli_text("Combined analysis of clinical significance using the {.strong {cs_method}} and {.strong statistical} approach method for calculating the RCI and population cutoffs.")
-    cli::cat_line()
-    cli::cli_text("There were {.strong {n_original}} participants in the whole dataset of which {.strong {n_used}} {.strong ({pct}%)} could be included in the analysis.")
-    cli::cat_line()
-    cli::cli_text(reliability_summary)
-    cli::cat_line()
-    cli::cli_text("The cutoff type was {.strong {cutoff_type}} with a value of {.strong {cutoff_value}} based on the following sumamry statistics:")
-    cli::cat_line()
-    cli::cli_h3("Population Characteristics")
-    cli::cli_verbatim(cutoff_descriptives)
-    cli::cat_line()
-
-    cli::cli_h3("Individual Level Results")
-    cli::cli_verbatim(summary_table_formatted)
-    if (cs_method == "HA") {
-      cli::cat_line()
-      cli::cli_h3("Group Level Results")
-      cli::cli_verbatim(group_summary_table)
-    }
-  }
-  output_fun()
+  .print_strings(
+    model_info,
+    cutoff_descriptives,
+    summary_table
+  )
 }
